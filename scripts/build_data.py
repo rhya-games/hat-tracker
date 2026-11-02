@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""Build public/hats.json from game-data-tools data.
+Run: GAME_DATA=/Users/jax/Projects/game-data-tools python3 scripts/build_data.py
+Hats = reward items of uaRO quests that are headgear, plus quests named after a headgear item.
+Emulator values (rathena renewal items, pre-renewal drops) are official iRO, not uaRO. Drop rates get uaRO x5 (cap 100%), MvP x3."""
+import glob, json, os, re, shutil, sys, time
+from pathlib import Path
+import yaml
+
+GD = os.environ.get('GAME_DATA', '/Users/jax/Projects/game-data-tools')
+OUT = Path(__file__).resolve().parent.parent / 'public'
+LOAD = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
+
+def yml(p): return yaml.load(Path(p).read_text(encoding='utf-8'), Loader=LOAD).get('Body', [])
+
+items = {}
+for f in glob.glob(f'{GD}/rathena/db/re/item_db_*.yml'):
+    for d in yml(f): items[d['Id']] = d
+aegis = {d['AegisName']: i for i, d in items.items()}
+for f in glob.glob(f'{GD}/rathena/db/pre-re/item_db_*.yml'):  # drops come from pre-renewal, so resolve its item names
+    for d in yml(f): aegis[d['AegisName']] = d['Id']
+is_head = lambda i: i in items and any(k.startswith('Head_') for k in (items[i].get('Locations') or {}))
+by_name = {}
+for i, d in items.items():
+    if is_head(i): by_name.setdefault(d['Name'].lower(), []).append(i)
+
+info = {}
+for l in open(f'{GD}/index/iteminfo.jsonl', encoding='utf-8'):
+    r = json.loads(l); info[r['id']] = r
+
+spawns = set()  # mob ids that spawn in the pre-renewal field/dungeon/city scripts (not event or summon-only mobs)
+for f in glob.glob(f'{GD}/rathena/npc/pre-re/mobs/**/*.txt', recursive=True):
+    for l in open(f, encoding='utf-8', errors='replace'):
+        m = re.match(r'[^/\s]+,[^\t]*\t(?:boss_)?monster\t[^\t]+\t(\d+)', l)
+        if m: spawns.add(int(m.group(1)))
+print(f'{len(spawns)} naturally spawning mobs')
+drops = {}  # item id -> [(mob, rate, mvp)]
+for d in yml(f'{GD}/rathena/db/pre-re/mob_db.yml'):
+    if d['Id'] not in spawns: continue
+    for key, mvp in (('Drops', False), ('MvpDrops', True)):
+        for x in d.get(key) or []:
+            i = aegis.get(x.get('Item'))
+            if i is None: continue
+            pct = x.get('Rate', 0) / 100 * (3 if mvp else 5)
+            drops.setdefault(i, []).append({'mob': d['Name'], 'mob_id': d['Id'], 'rate': round(min(pct, 100), 3), 'mvp': mvp})
+for v in drops.values(): v.sort(key=lambda x: -x['rate'])
+
+from PIL import Image
+HOLE_LUM = 150
+SCALE = {}  # sprite id -> display size multiplier, for any hat that looks off next to a character
+STRIP = {'200'}  # sprites drawn with a light-grey outline for pale backdrops (Zealotus Mask)
+HOLES, WHITE = set(), set()  # sprite ids to force; see clean()  # sprite ids to force; see clean()
+def clean(src, dst, strip=False):
+    """GIF -> RGBA PNG. The sources key transparency on palette entry 0, and the art's white pixels were mapped to it,
+    so white inside the art shows as holes. Transparent pixels connected to the border stay transparent. An enclosed
+    transparent region becomes white unless it looks like a real opening (a hood's face hole): large and ringed by dark
+    pixels. HOLES / WHITE below force the call for a region touching a sprite listed there."""
+    if dst.exists(): return
+    im = Image.open(src).convert('RGBA'); w, h = im.size; px = im.load()
+    WH = (255, 255, 255, 255)  # a few sprites (141) have an opaque white backdrop with transparent corners
+    bgst = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
+    if any(px[p] == WH for p in bgst):
+        vis = set()
+        while bgst:
+            x, y = bgst.pop()
+            if (x, y) in vis or not (0 <= x < w and 0 <= y < h) or not (px[x, y] == WH or px[x, y][3] == 0): continue
+            vis.add((x, y)); bgst += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        for p in vis: px[p] = (0, 0, 0, 0)
+    seen, stack = set(), [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
+    while stack:
+        x, y = stack.pop()
+        if (x, y) in seen or not (0 <= x < w and 0 <= y < h) or px[x, y][3]: continue
+        seen.add((x, y)); stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+    done = set(seen)
+    for y0 in range(h):
+        for x0 in range(w):
+            if px[x0, y0][3] or (x0, y0) in done: continue
+            reg, st, ring = [], [(x0, y0)], []
+            while st:
+                x, y = st.pop()
+                if (x, y) in done: continue
+                if px[x, y][3]: ring.append(px[x, y]); continue
+                done.add((x, y)); reg.append((x, y)); st += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+            lum = sum(.3 * r + .59 * g + .11 * b for r, g, b, _ in ring) / max(len(ring), 1)
+            hole = len(reg) >= 12 and lum < HOLE_LUM
+            if Path(src).stem in HOLES: hole = True
+            if Path(src).stem in WHITE: hole = False
+            if not hole:
+                for x, y in reg: px[x, y] = (255, 255, 255, 255)
+    # some sprites carry a light-grey outline meant for pale backdrops; drop it from the outer edge when it is a minority of the edge
+    def light(p): return .3 * p[0] + .59 * p[1] + .11 * p[2] > 205 and max(p[:3]) - min(p[:3]) < 30
+    edge = [(x, y) for y in range(h) for x in range(w) if px[x, y][3] and any(
+        not (0 <= x + dx < w and 0 <= y + dy < h) or (x + dx, y + dy) in seen for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
+    lite = [e for e in edge if light(px[e])]
+    if strip and Path(src).stem in STRIP:
+        for e in lite: px[e] = (0, 0, 0, 0)
+    dst.parent.mkdir(parents=True, exist_ok=True); im.save(dst)
+
+V = int(time.time())  # appended to image URLs so browsers don't keep stale copies
+def icon(i):
+    s = Path(GD) / f'images/items/item{i}.gif'
+    if s.exists():
+        clean(s, OUT / f'img/item{i}.png'); return f'img/item{i}.png?v={V}'
+def viewimg(v):
+    s = Path(GD) / f'index/viewlist_img/{v}.gif'
+    if v and s.exists():
+        clean(s, OUT / f'img/view/{v}.png', strip=True); return f'img/view/{v}.png?v={V}'
+def sprite_size(v):
+    f = OUT / f'img/view/{v}.png'
+    return list(Image.open(f).size) if v and f.exists() else None
+def iname(i, fb):
+    return (info.get(i) or {}).get('name') or (items.get(i) or {}).get('Name') or fb
+
+quests = json.load(open(f'{GD}/data/uaro-quests.json'))['quests']
+try: rms = json.load(open(f'{GD}/index/rms-quests.json'))  # bin/fetch_rms_quests.py; official iRO quest pages on RateMyServer
+except OSError: rms = {}
+# uaRO changes to official recipes (uaro-docs improvements.md): quest id -> {ingredient item id: qty}
+QTY = {'uaro-boy-s-cap': {1030: 5}}
+OVERRIDE = {'uaro-evil-wing-ears': 5068}  # same name as 5044 (upper) and 18519; the quest takes Elven Ears (mid)
+CUSTOM = {'Server Hat Quest', 'Headgear Quest'}
+hats, seen, missing = {}, set(), {'icon': set(), 'unknown_item': set()}
+for q in quests:
+    rew = [r for r in (q.get('rewards') or {}).get('items', []) if r.get('item_id')]
+    found = [r for r in rew if is_head(r['item_id'])]
+    custom = False
+    if not found and rew and CUSTOM & set(q['categories']):
+        found, custom = rew, True  # uaRO-only item, not in the emulator db
+    if not found and not rew:
+        base = re.sub(r'\s*\[\d+\]\s*$', '', q['name']).lower()
+        ids = [OVERRIDE[q['id']]] if q['id'] in OVERRIDE else by_name.get(base) or by_name.get(base + ' [1]')
+        if ids and q.get('ingredients'): found = [{'item_id': ids[0], 'item': q['name'], 'qty': 1}]
+    for r in found:
+        hid = r['item_id']
+        if hid in hats: hats[hid]['quests'].append(q['id']); continue
+        d, inf = items.get(hid) or {}, info.get(hid) or {}
+        desc = inf.get('description') or []
+        ings = []
+        for g in [g for g in q.get('ingredients') or [] if g.get('item_id')]:
+            gi = g['item_id']
+            if gi and not icon(gi): missing['icon'].add(gi)
+            ings.append({'id': gi, 'name': iname(gi, g['item']), 'qty': QTY.get(q['id'], {}).get(gi, g['qty']), 'icon': icon(gi), 'drops': drops.get(gi, [])[:6]})
+        if not icon(hid): missing['icon'].add(hid)
+        hats[hid] = {
+            'id': hid, 'name': iname(hid, r['item']), 'icon': icon(hid), 'custom': custom or hid not in items,
+            'slots': inf.get('slots', d.get('Slots', 0)), 'view': inf.get('view'), 'sprite': viewimg(inf.get('view')), 'size': sprite_size(inf.get('view')), 'scale': SCALE.get(str(inf.get('view')), 1),
+            'locations': [k[5:] for k in (d.get('Locations') or {})], 'def': d.get('Defense'),
+            'level': d.get('EquipLevelMin'), 'jobs': [j for j, v in (d.get('Jobs') or {}).items() if v] if d.get('Jobs') else [],
+            'desc': [x for x in desc if x],
+            'quests': [q['id']], 'quest_name': q['name'], 'npc': q.get('npc'), 'location': q.get('location'),
+            'min_level': q.get('min_level'), 'wiki': q.get('wiki'), 'categories': q['categories'],
+            'rms': [{'title': x['title'], 'url': x['url']} for x in rms.get(str(hid), []) if x['role'] == 'makes'],
+            'ingredients': ings, 'drops': drops.get(hid, [])[:6],
+        }
+OUT.mkdir(exist_ok=True)
+if (Path(GD)/'images/items/card.gif').exists(): clean(Path(GD)/'images/items/card.gif', OUT/'img/card.png')
+data = {'note': 'Item data is official iRO (rathena); drops are pre-renewal and rates have uaRO x5 (MvP x3) applied. Custom uaRO items have no emulator data.',
+        'hats': sorted(hats.values(), key=lambda h: h['name'].lower())}
+(OUT / 'hats.json').write_text(json.dumps(data, ensure_ascii=False, indent=1))
+print(f"{len(hats)} hats ({sum(h['custom'] for h in hats.values())} custom uaRO), "
+      f"{sum(1 for h in hats.values() if h['icon'])} with icons, {sum(1 for h in hats.values() if h['drops'])} drop somewhere")
+print('ids without icon:', sorted(missing['icon']))

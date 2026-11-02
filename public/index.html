@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hat Tracker</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1f2328;--mute:#6b7280;--line:#e3dfd6;--accent:#b4472b;--ok:#2f7d4f;--warn:#8a5a00;--chip:#efebe2}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#16181c;--card:#20242a;--ink:#e8e6e1;--mute:#98a0ab;--line:#31363e;--accent:#e0785a;--ok:#5bc084;--warn:#8a5a00;--chip:#2a2f37}}
+:root[data-theme=dark]{--bg:#16181c;--card:#20242a;--ink:#e8e6e1;--mute:#98a0ab;--line:#31363e;--accent:#e0785a;--ok:#5bc084;--warn:#8a5a00;--chip:#2a2f37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+h1{font-size:18px;margin:0 12px 0 0}
+input,select,button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#q{flex:1;min-width:160px}
+.bar{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .2s}
+.stats{color:var(--mute);font-size:13px;margin-top:6px}
+.layout{display:flex;align-items:flex-start}
+main{padding:16px;flex:1;min-width:0}
+aside{position:sticky;top:var(--hh,100px);width:max(600px,40vw);flex:none;height:calc(100vh - var(--hh,100px));overflow:auto;background:var(--card);border-left:1px solid var(--line)}
+aside[hidden]{display:none}
+@media (max-width:1000px){aside{position:fixed;inset:0;top:auto;height:80vh;width:100%;border:1px solid var(--line);border-radius:14px 14px 0 0;z-index:10;box-shadow:0 -8px 30px rgba(0,0,0,.35)}}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ms{position:relative}.ms summary{list-style:none;cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 10px;user-select:none}
+.ms summary::-webkit-details-marker{display:none}.ms summary::after{content:" ▾";color:var(--mute)}
+.ms.act summary{border-color:var(--accent)}
+.ms .opts{position:absolute;z-index:8;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px;min-width:180px;max-height:300px;overflow:auto;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.ms label{display:flex;gap:8px;align-items:center;padding:3px 6px;white-space:nowrap;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative}
+.card:hover{border-color:var(--accent)}
+.card .art{height:120px;padding:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:var(--chip);border-radius:8px}
+.art img,.mat img,.card .nm img{image-rendering:pixelated}
+.card .art{height:132px}
+.card .art img{image-rendering:pixelated;max-width:100%}
+.card .art img.fb{width:100%;height:100%;object-fit:contain}
+.card .nm{font-weight:600;font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--mute);font-size:12px}
+.badge{position:absolute;top:8px;right:8px;font-size:11px;padding:2px 7px;border-radius:10px;background:var(--chip);color:var(--mute)}
+.s-collecting .badge{background:var(--warn);color:#fff}.s-crafted .badge,.s-owned .badge{background:var(--ok);color:#fff}
+.s-crafted,.s-owned{border-color:var(--ok)}
+.mini{height:5px;background:var(--chip);border-radius:3px;overflow:hidden}.mini i{display:block;height:100%;background:var(--warn)}
+.mat{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.mat img{width:24px;height:24px}
+.mat .n{flex:1}.mat input{width:68px}
+.done{color:var(--ok)}
+.dlg{padding:16px}
+.hd{display:flex;gap:12px;align-items:center}.hd .art{min-width:128px;min-height:128px;padding:16px;box-sizing:border-box;flex:none;background:var(--chip);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.hd .art img{image-rendering:pixelated;max-width:100%}
+.hd{flex-wrap:wrap}
+#mats table{width:100%;border-collapse:collapse;font-size:14px}
+#mats th{text-align:left;color:var(--mute);font-weight:500;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+#mats td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+#mats td.num,#mats th.num{text-align:right;font-variant-numeric:tabular-nums}
+#mats input{width:68px}#mats img{width:24px;height:24px;image-rendering:pixelated;vertical-align:middle;margin-right:6px}
+#mats tr.off{opacity:.5}
+.used a{color:var(--mute);text-decoration:none}.used a:hover{color:var(--accent);text-decoration:underline}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;background:var(--chip);color:var(--mute);white-space:nowrap}
+.tag.need{background:var(--warn);color:#fff}.tag.ok{background:var(--ok);color:#fff}.tag.part{background:var(--chip);color:var(--ink);border:1px solid var(--warn)}
+.mat.off{opacity:.55}
+details.stats{margin:10px 0}details.stats summary{cursor:pointer;color:var(--mute);font-size:13px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.quick .q{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.quick input{width:72px}.quick img{width:24px;height:24px;image-rendering:pixelated}
+.desc{white-space:pre-line;font-size:13px;color:var(--mute);margin:10px 0}
+.hatlink{color:var(--accent);text-decoration:none;font-weight:600}.hatlink:hover{text-decoration:underline}
+#back{display:inline-block;margin-bottom:10px;font-size:13px}
+.idc{font:11px ui-monospace,Menlo,monospace;padding:0 6px;border-radius:6px;color:var(--mute);background:var(--chip);border:1px solid var(--line);cursor:pointer;vertical-align:baseline}.idc:hover{color:var(--ink);border-color:var(--accent)}.idc.ok{color:#fff;background:var(--ok);border-color:var(--ok)}
+.drops{font-size:12px;color:var(--mute);margin:0 0 4px 32px}
+h3{margin:14px 0 4px;font-size:14px}
+.empty{text-align:center;color:var(--mute);padding:40px}
+.shop li{margin:2px 0}
+@media (max-width:520px){h1{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Hat Tracker</h1>
+    <input id="q" type="search" placeholder="Search hats, materials, NPC…">
+    <details class="ms" id="fs"><summary>Status</summary><div class="opts"></div></details>
+    <details class="ms" id="fn"><summary>Source</summary><div class="opts"></div></details>
+    <details class="ms" id="fl"><summary>Slots</summary><div class="opts"></div></details>
+    <button id="rdy" title="Only hats whose materials are all collected">Ready to craft</button>
+    <button id="view" title="Switch between hat cards and the combined material list">Materials list</button>
+    <button id="shop">Shopping list</button>
+    <button id="exp">Export</button><button id="imp">Import</button>
+    <button id="th" title="Toggle theme">◐</button>
+  </div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="stats" id="stats"></div>
+</header>
+<div class="layout"><main><div class="quick" id="quick" hidden></div><div class="grid" id="grid"></div><div id="mats" hidden></div><div class="empty" id="empty" hidden>No hats match.</div>
+<p class="sub" id="note"></p></main>
+<aside id="panel" hidden><div class="dlg" id="dbody"></div></aside></div>
+<input type="file" id="file" accept="application/json" hidden>
+<script>
+const STATUS={none:'Not started',collecting:'Collecting',crafted:'Crafted',owned:'Owned'};
+const DONE=s=>s==='crafted'||s==='owned';
+let HATS=[],state={};
+const KEY='hat-tracker-v1';
+const load=()=>{try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch{state={}}migrate()};
+function migrate(){if(state._inv)return;state._inv={};for(const o of Object.values(state))for(const[k,v]of Object.entries(o.have||{}))state._inv[k]=Math.max(state._inv[k]||0,v)}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}};
+const st=h=>state[h.id]||(state[h.id]={status:'none',have:{}});
+const status=h=>{const s=(state[h.id]||{}).status||'none';return s==='none'&&h.ingredients.some(g=>have(h,g)>0)?'collecting':s};  // holding any material counts as in progress
+const have=(h,g)=>(state._inv||{})[g.id]||0;  // one shared count per material, not per hat
+const progress=h=>{const g=h.ingredients;if(!g.length)return 0;return g.reduce((a,x)=>a+Math.min(have(h,x),x.qty)/x.qty,0)/g.length};
+const ready=h=>h.ingredients.length&&h.ingredients.every(g=>have(h,g)>=g.qty);
+let panelId=null;const F={fs:new Set(['none','collecting','crafted']),fn:new Set(),fl:new Set()},ST_ALL=['none','collecting','crafted','owned'];let onlyReady=false,view='grid';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const img=(src,alt='')=>src?`<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" onerror="this.src='img/card.png'">`:'';
+const chip=(id,kind)=>`<button type="button" class="idc" data-copy="${id}" title="Copy ${kind} ID">${id}</button>`;
+// sprites are drawn at one shared zoom so hats keep their true size relative to each other (card 2x, panel 3x)
+const art=(h,z)=>h.sprite&&h.size?`<img src="${esc(h.sprite)}" alt="${esc(h.name)}" style="width:${h.size[0]*z*(h.scale||1)}px;height:${h.size[1]*z*(h.scale||1)}px" onerror="this.src='img/card.png'">`:`<img class="fb" src="${esc(h.icon||'img/card.png')}" alt="${esc(h.name)}">`;
+const naviCmd=l=>l?'/navi '+l.replace(/^\/navi\s+/,''):'';
+const fmt=r=>r>=1?+r.toFixed(2)+'%':+r.toFixed(3)+'%';
+const label=h=>h.name+(h.slots?` [${h.slots}]`:'');
+
+function filtered(){
+  const q=$('q').value.toLowerCase();
+  return HATS.filter(h=>{
+    const s=status(h);
+    if(!F.fs.has(s))return false;
+    if(onlyReady&&!(ready(h)&&!DONE(s)))return false;
+    if(F.fn.size&&!F.fn.has(h.npc||'Other'))return false;
+    if(F.fl.size&&!F.fl.has(String(h.slots)))return false;
+    if(q&&!(h.name+' '+(h.npc||'')+' '+h.ingredients.map(g=>g.name).join(' ')).toLowerCase().includes(q))return false;
+    return true});
+}
+function msBuild(id,opts,label){
+  const el=$(id);el.querySelector('.opts').innerHTML=opts.map(([v,t])=>`<label><input type="checkbox" value="${esc(v)}" ${F[id].has(v)?'checked':''}>${esc(t)}</label>`).join('');
+  el.querySelectorAll('input').forEach(i=>i.onchange=()=>{i.checked?F[id].add(i.value):F[id].delete(i.value);msLabel(id,label);render()});msLabel(id,label)}
+function msLabel(id,label){const n=F[id].size,el=$(id);el.querySelector('summary').textContent=label+(n?` (${n})`:'');el.classList.toggle('act',n>0&&!(id==='fs'&&n===ST_ALL.length))}
+function quick(){
+  const q=$('q').value.trim().toLowerCase(),m={};
+  if(q)HATS.forEach(h=>h.ingredients.forEach(g=>{if(g.name.toLowerCase().includes(q))m[g.id]=g}));
+  const L=Object.values(m).slice(0,12);$('quick').hidden=!L.length;
+  $('quick').innerHTML=L.map(g=>`<label class="q">${img(g.icon,g.name)}<span>${esc(g.name)}</span>${chip(g.id,'item')}<input type="number" min="0" value="${have(null,g)}" data-q="${g.id}" aria-label="Have ${esc(g.name)}"></label>`).join('');
+  $('quick').querySelectorAll('input').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.q]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
+}
+function matRows(list){
+  const m={};
+  list.forEach(h=>h.ingredients.forEach(g=>{const o=m[g.id]||(m[g.id]={g,total:0,hats:[],open:0});o.total+=DONE(status(h))?0:g.qty;o.hats.push(h);if(!DONE(status(h)))o.open++}));
+  return Object.values(m).map(o=>{const n=have(null,o.g),still=Math.max(0,o.total-n);
+    o.have=n;o.still=still;o.st=o.open===0?'off':still===0?'ok':n>0?'part':'need';return o}).sort((a,b)=>{const r={need:0,part:0,ok:1,off:2};return r[a.st]-r[b.st]||b.still-a.still||a.g.name.localeCompare(b.g.name)});
+}
+const TAG={need:['Needed','need'],part:['Partly have','part'],ok:['Have enough','ok'],off:['Not needed','']};
+function renderMats(list){
+  const rows=matRows(list),need=rows.filter(r=>r.still>0);
+  $('mats').innerHTML=`<div class="sub" style="margin-bottom:8px">${need.length} materials still needed · ${need.reduce((a,r)=>a+r.still,0).toLocaleString()} items in total, across the ${list.length} hats shown (hats marked Crafted or Owned don't count).</div>
+  <table><thead><tr><th>Material</th><th class="num">Needed</th><th class="num">Have</th><th class="num">Still need</th><th>Status</th><th>Used by</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="${r.st==='off'?'off':''}"><td>${img(r.g.icon,r.g.name)}${esc(r.g.name)} ${chip(r.g.id,'item')}</td>
+    <td class="num">${r.total.toLocaleString()}</td>
+    <td class="num"><input type="number" min="0" value="${r.have}" data-m="${r.g.id}" aria-label="Have ${esc(r.g.name)}"></td>
+    <td class="num"><b>${r.still.toLocaleString()}</b></td>
+    <td><span class="tag ${TAG[r.st][1]}">${TAG[r.st][0]}</span></td>
+    <td class="used">${r.hats.map(h=>`<a href="#" data-hat="${h.id}">${esc(h.name)}</a>`).join(', ')}</td></tr>`).join('')}</tbody></table>`;
+  $('mats').querySelectorAll('input[data-m]').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.m]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
+  $('mats').querySelectorAll('[data-hat]').forEach(a=>a.onclick=e=>{e.preventDefault();navStack=[];openHat(+a.dataset.hat)});
+}
+function render(){
+  $('rdy').classList.toggle('on',onlyReady);
+  $('view').classList.toggle('on',view==='mats');$('view').textContent=view==='mats'?'Hat cards':'Materials list';
+  document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px');
+  const list=filtered();
+  $('grid').hidden=view==='mats';$('mats').hidden=view!=='mats';
+  if(view==='mats')renderMats(list);
+  $('grid').innerHTML=view==='mats'?'':list.map(h=>{const s=status(h),p=progress(h);
+    return `<div class="card s-${s}${panelId==h.id?' sel':''}" data-id="${h.id}"><span class="badge">${STATUS[s]}</span>
+    <div class="art">${art(h,2)}</div>
+    <div class="nm">${img(h.icon)} ${esc(label(h))}</div>
+    <div class="sub">${[h.npc,h.ingredients.length?`${h.ingredients.length} material${h.ingredients.length>1?'s':''}`:''].filter(Boolean).map(esc).join(' · ')}</div>
+    ${h.ingredients.length&&!DONE(s)?`<div class="mini"><i style="width:${p*100}%"></i></div>`:''}</div>`}).join('');
+  $('grid').querySelectorAll('.card img:not(.art img)').forEach(i=>i.style.cssText='width:24px;height:24px;vertical-align:middle');
+  $('empty').hidden=list.length>0||view==='mats';
+  const n=HATS.length,d=HATS.filter(h=>DONE(status(h))).length,c=HATS.filter(h=>status(h)==='collecting').length;
+  $('prog').style.width=(n?d/n*100:0)+'%';
+  $('stats').textContent=`${d} of ${n} hats done · ${c} in progress · ${HATS.filter(h=>ready(h)&&!DONE(status(h))).length} ready to craft · showing ${list.length}`;
+}
+let navStack=[];
+function openHat(id,fromLink){
+  if(fromLink&&panelId!=null&&panelId!=id)navStack.push(panelId);
+  const h=HATS.find(x=>x.id==id),s=status(h);
+  const mats=h.ingredients.map(g=>{const n=have(h,g),ok=n>=g.qty,off=DONE(s);
+    return `<div class="mat ${off?'off':''}"><span>${img(g.icon,g.name)}</span><span class="n ${ok?'done':''}">${HATS.some(x=>x.id===g.id&&x.id!==h.id)?`<a href="#" class="hatlink" data-hat="${g.id}" title="Open this hat">${esc(g.name)} ↗</a>`:esc(g.name)} ${chip(g.id,'item')} <span class="sub">× ${g.qty}${off?'':ok?' ✓':` · need ${g.qty-n} more`}</span> ${off?'<span class="tag">Not needed</span>':ok?'<span class="tag ok">Have enough</span>':''}</span>
+    <input type="number" min="0" value="${n}" data-g="${g.id}" aria-label="Have ${esc(g.name)}"></div>
+    ${g.drops.length?`<div class="drops">Drops: ${g.drops.map(d=>`${esc(d.mob)} ${chip(d.mob_id,'mob')} ${fmt(d.rate)}${d.mvp?' (MVP)':''}`).join(', ')}</div>`:''}`}).join('');
+  $('dbody').innerHTML=`${navStack.length?`<a href="#" class="hatlink" id="back">← Back to ${esc(label(HATS.find(x=>x.id==navStack[navStack.length-1])))}</a>`:''}<div class="hd"><div class="art">${art(h,3)}</div><div style="flex:1">
+    <div style="font-size:18px;font-weight:700">${esc(label(h))} ${chip(h.id,'item')}</div>
+    <div class="sub">${esc(h.locations.join(', '))}${h.def!=null?` · DEF ${h.def}`:''}${h.level?` · Lv ${h.level}+`:''}</div>
+    <div class="sub">${esc(h.npc||'')}${h.npc&&h.location?' · ':''}${h.location?`<button type="button" class="idc" data-copy="${esc(naviCmd(h.location))}" title="Copy navigation command">${esc(naviCmd(h.location))}</button>`:''}</div>
+    <div style="margin-top:8px"><select id="ds">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===s?'selected':''}>${v}</option>`).join('')}</select>
+    ${h.wiki?`<a href="${esc(h.wiki)}" target="_blank" rel="noopener" class="sub">Wiki ↗</a>`:''}
+    ${(h.rms||[]).map(r=>`<a href="${esc(r.url)}" target="_blank" rel="noopener" class="sub" title="${esc(r.title)} (RateMyServer, official iRO quest)">RMS quest ↗</a>`).join(' ')}</div></div></div>
+    ${h.desc.length?`<details class="stats"><summary>Stats &amp; description</summary><div class="desc">${esc(h.desc.join('\n'))}</div></details>`:''}
+    <h3>Materials ${h.ingredients.length?`(${Math.round(progress(h)*100)}%)`:''}</h3>${mats||'<div class="sub">No materials recorded (drop or other source).</div>'}
+    ${h.drops.length?`<h3>Hat drops</h3><div class="sub">${h.drops.map(d=>`${esc(d.mob)} ${chip(d.mob_id,'mob')} ${fmt(d.rate)}`).join(', ')}</div>`:''}
+    <div style="text-align:right;margin-top:12px"><button id="close">Close</button></div>`;
+  $('ds').onchange=e=>{st(h).status=e.target.value;save();render();openHat(id)};
+  $('dbody').querySelectorAll('input[data-g]').forEach(i=>i.onchange=()=>{
+    const n=Math.max(0,+i.value||0);(state._inv||(state._inv={}))[i.dataset.g]=n;
+    save();quick();render();openHat(id)});
+  $('close').onclick=closePanel;
+  $('dbody').querySelectorAll('[data-hat]').forEach(a=>a.onclick=e=>{e.preventDefault();openHat(+a.dataset.hat,true)});
+  if($('back'))$('back').onclick=e=>{e.preventDefault();openHat(navStack.pop())};
+  const keep=panelId==h.id?$('panel').scrollTop:0;panelId=h.id;$('panel').hidden=false;render();$('panel').scrollTop=keep;
+}
+function closePanel(){navStack=[];panelId=null;$('panel').hidden=true;render()}
+function shopping(){
+  const need={};
+  HATS.filter(h=>status(h)==='collecting').forEach(h=>h.ingredients.forEach(g=>{
+    const o=need[g.id]||(need[g.id]={g,q:0,for:[]});o.q+=g.qty;o.for.push(h.name)}));
+  for(const o of Object.values(need))o.n=o.q-have(null,o.g);for(const k in need)if(need[k].n<=0)delete need[k];
+  const rows=Object.values(need).sort((a,b)=>b.n-a.n);
+  $('dbody').innerHTML=`<div style="font-size:18px;font-weight:700">Shopping list</div>
+  <div class="sub">Missing materials for every hat marked “Collecting”.</div>
+  ${rows.length?rows.map(r=>`<div class="mat">${img(r.g.icon)}<span class="n">${esc(r.g.name)} ${chip(r.g.id,'item')} <span class="sub">${esc(r.for.join(', '))}</span></span><b>${r.n}</b></div>`).join(''):'<div class="empty">Nothing needed. Mark hats as “Collecting” to build a list.</div>'}
+  <div style="text-align:right;margin-top:12px"><button id="close">Close</button></div>`;
+  $("close").onclick=closePanel;navStack=[];panelId=null;$("panel").hidden=false;render();
+}
+async function init(){
+  load();
+  const t=(()=>{try{return localStorage.getItem('hat-theme')}catch{}})();if(t)document.documentElement.dataset.theme=t;
+  const d=await (await fetch('hats.json',{cache:'no-cache'})).json();HATS=d.hats;$('note').textContent=d.note;
+  msBuild('fs',Object.entries(STATUS),'Status');
+  msBuild('fn',[...new Set(HATS.map(h=>h.npc||'Other'))].sort().map(n=>[n,n]),'Source');
+  msBuild('fl',[...new Set(HATS.map(h=>h.slots))].sort().map(n=>[String(n),`${n} slots`]),'Slots');
+  $('q').addEventListener('input',()=>{quick();render()});
+  document.addEventListener('click',async e=>{const b=e.target.closest('.idc');if(!b)return;e.preventDefault();e.stopPropagation();
+    const v=b.dataset.copy;try{await navigator.clipboard.writeText(v)}catch{const t=document.createElement('textarea');t.value=v;document.body.append(t);t.select();try{document.execCommand('copy')}catch{}t.remove()}
+    const o=b.textContent;b.textContent='copied';b.classList.add('ok');setTimeout(()=>{b.textContent=o;b.classList.remove('ok')},900)});
+  $('view').onclick=()=>{view=view==='mats'?'grid':'mats';render()};
+  $('rdy').onclick=()=>{onlyReady=!onlyReady;render()};
+  document.addEventListener('click',e=>{document.querySelectorAll('.ms[open]').forEach(d=>{if(!d.contains(e.target))d.open=false})});
+  $('grid').onclick=e=>{const c=e.target.closest('.card');if(c){navStack=[];openHat(c.dataset.id)}};
+  $('shop').onclick=shopping;
+  $('th').onclick=()=>{const r=document.documentElement,n=(r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem('hat-theme',n)}catch{}};
+  $('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));a.download='hat-tracker-progress.json';a.click()};
+  $('imp').onclick=()=>$('file').click();
+  $('file').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(typeof j!=='object'||Array.isArray(j))throw 0;state=j;migrate();save();render()}catch{alert('Not a valid progress file.')}e.target.value=''};
+  render();
+}
+init();
+</script>
+</body>
+</html>
