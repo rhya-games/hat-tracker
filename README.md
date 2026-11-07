@@ -6,6 +6,8 @@ The hat data and images come from [game-data-tools](../game-data-tools) and are 
 
 ## Run
 
+With the `hats` command installed (`ln -s "$PWD/scripts/hats" ~/.local/bin/hats`), just type `hats`: it starts the server and opens the page, or just opens it if it's already running. Manually:
+
 ```bash
 GAME_DATA=/Users/jax/Projects/game-data-tools python3 scripts/build_data.py
 python3 scripts/serve.py 8765
