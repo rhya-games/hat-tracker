@@ -1,6 +1,6 @@
 # Hat Tracker
 
-A local page for tracking and crafting uaRO hats: status, shared material counts, a combined materials list, drop sources and links to official quests. Progress is saved in the browser (export/import as JSON).
+A local page for tracking and crafting uaRO hats: status, shared material counts, a combined materials list, drop sources and links to official quests. Progress is saved to `progress.json` in this repo (also kept in the browser; export/import as JSON).
 
 The hat data and images come from [game-data-tools](../game-data-tools) and are not stored here (`public/hats.json` and `public/img/` are git-ignored; the data belongs to its original projects).
 
@@ -8,10 +8,10 @@ The hat data and images come from [game-data-tools](../game-data-tools) and are 
 
 ```bash
 GAME_DATA=/Users/jax/Projects/game-data-tools python3 scripts/build_data.py
-cd public && python3 -m http.server 8765
+python3 scripts/serve.py 8765
 ```
 
-Open http://localhost:8765/.
+Open http://localhost:8765/. `scripts/serve.py` serves `public/` and saves your progress to `progress.json` in this folder after every change; commit that file to keep a history. Open the page any other way and progress is kept in the browser only (the page says which). Progress loads from `progress.json` first, and a browser-only copy is uploaded the first time if the file doesn't exist yet.
 
 ## Needs from game-data-tools
 

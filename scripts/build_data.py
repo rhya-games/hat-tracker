@@ -48,8 +48,9 @@ for v in drops.values(): v.sort(key=lambda x: -x['rate'])
 from PIL import Image
 HOLE_LUM = 150
 SCALE = {}  # sprite id -> display size multiplier, for any hat that looks off next to a character
+ICON_ART = set()  # sprites broken in the source (Red Ribbon keeps 36 of 684 pixels); show the item icon instead
 STRIP = {'200'}  # sprites drawn with a light-grey outline for pale backdrops (Zealotus Mask)
-HOLES, WHITE = set(), set()  # sprite ids to force; see clean()  # sprite ids to force; see clean()
+HOLES, WHITE = {'138', '110', '381'}, {'378'}  # sprite ids to force; see clean()
 def clean(src, dst, strip=False):
     """GIF -> RGBA PNG. The sources key transparency on palette entry 0, and the art's white pixels were mapped to it,
     so white inside the art shows as holes. Transparent pixels connected to the border stay transparent. An enclosed
@@ -102,6 +103,9 @@ def icon(i):
     if s.exists():
         clean(s, OUT / f'img/item{i}.png'); return f'img/item{i}.png?v={V}'
 def viewimg(v):
+    own = OUT.parent / 'assets/sprites' / f'{v}.png'  # hand-supplied sprite (scripts/import_sprite.py) beats the viewlist one
+    if v and own.exists():
+        (OUT / 'img/view').mkdir(parents=True, exist_ok=True); shutil.copy(own, OUT / f'img/view/{v}.png'); return f'img/view/{v}.png?v={V}'
     s = Path(GD) / f'index/viewlist_img/{v}.gif'
     if v and s.exists():
         clean(s, OUT / f'img/view/{v}.png', strip=True); return f'img/view/{v}.png?v={V}'
@@ -142,7 +146,7 @@ for q in quests:
         if not icon(hid): missing['icon'].add(hid)
         hats[hid] = {
             'id': hid, 'name': iname(hid, r['item']), 'icon': icon(hid), 'custom': custom or hid not in items,
-            'slots': inf.get('slots', d.get('Slots', 0)), 'view': inf.get('view'), 'sprite': viewimg(inf.get('view')), 'size': sprite_size(inf.get('view')), 'scale': SCALE.get(str(inf.get('view')), 1),
+            'slots': inf.get('slots', d.get('Slots', 0)), 'view': inf.get('view'), 'sprite': icon(hid) if str(inf.get('view')) in ICON_ART else viewimg(inf.get('view')), 'size': [24, 24] if str(inf.get('view')) in ICON_ART else sprite_size(inf.get('view')), 'scale': SCALE.get(str(inf.get('view')), 1),
             'locations': [k[5:] for k in (d.get('Locations') or {})], 'def': d.get('Defense'),
             'level': d.get('EquipLevelMin'), 'jobs': [j for j, v in (d.get('Jobs') or {}).items() if v] if d.get('Jobs') else [],
             'desc': [x for x in desc if x],
