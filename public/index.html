@@ -35,7 +35,7 @@ b,th,.nm,.ttl,.hatlink,.utotal,.fold summary,.seg button.on,.pct{font-weight:600
 a{color:var(--accent)}
 /* shared pieces */
 .dr,.drops-list{line-height:var(--lh-l)}
-.muted,.sub,.src,.desc,.dr,.stats,.empty,.ttl,.urow .q,.used a,th{color:var(--mute);font-size:var(--text-s)}
+.muted,.sub,.desc,.dr,.stats,.empty,.ttl,.urow .q,.used a,th{color:var(--mute);font-size:var(--text-s)}
 .ctl,input,select,button,.ms summary{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--edge);border-radius:var(--r-m);padding:6px 10px}
 button,.ms summary{cursor:pointer}
 .ctl:hover,button:hover,.ms summary:hover,.on,.act,.sel{border-color:var(--accent)}
@@ -69,7 +69,7 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .ms{position:relative}.ms summary{list-style:none;user-select:none}.ms summary::-webkit-details-marker{display:none}.ms summary::after{content:" ▾";color:var(--mute)}
 .ms[open] .opts{animation:pop .16s var(--ease)}.ms .opts{position:absolute;z-index:8;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--edge);border-radius:var(--r-m);padding:6px;min-width:180px;max-height:300px;overflow:auto;box-shadow:var(--shadow)}
 .ms label{display:flex;gap:8px;align-items:center;padding:3px 6px;white-space:nowrap;cursor:pointer}
-.quick:not([hidden]){animation:rise .2s var(--ease)}.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.qrow{display:flex;align-items:center;gap:8px}.quick input{width:72px}
+.quick:not([hidden]){animation:rise .2s var(--ease)}.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.qrow{display:flex;align-items:center;gap:8px}
 /* cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative}
@@ -88,8 +88,16 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .xbtn:hover{background:var(--chip);color:var(--ink);border-color:var(--edge)}
 .hero{display:flex;gap:18px;align-items:flex-start;margin-bottom:18px}
 .hero .art{min-width:144px;min-height:144px;flex:none;border:1px solid var(--line);border-radius:var(--r-l)}
-.hero .info{flex:1;min-width:0}.hero .idline{margin-top:4px}
-.meta,.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.src{margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.hero .info{flex:1;min-width:0}
+.kicker{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.facts{display:grid;grid-template-columns:max-content 1fr;gap:8px 14px;align-items:center;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.facts dt{color:var(--mute);font-size:var(--text-s)}.facts dd{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.stepper{display:inline-flex;flex:none;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden;background:var(--card)}
+.stepper input{width:56px;border:0;border-radius:0;text-align:center;font-weight:400;-moz-appearance:textfield;appearance:textfield}
+.stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.stepper .step{border:0;border-radius:0;padding:6px 12px;line-height:1.25;color:var(--mute);background:var(--chip)}
+.stepper .step:hover{color:var(--ink);background:var(--line)}.stepper .step:active{transform:scale(.94)}
+.stepper:focus-within{border-color:var(--accent)}
 .seg{display:flex;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden;margin-bottom:12px}
 .seg button{flex:1;border:0;border-radius:0;background:transparent;padding:8px 4px;color:var(--mute)}
 .seg button+button{border-left:1px solid var(--edge)}
@@ -98,9 +106,9 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .seg button.on[data-st=none]{--fill:var(--mute-fill)}.seg button.on[data-st=collecting]{--fill:var(--warn-fill)}.seg button.on[data-st=crafted],.seg button.on[data-st=owned]{--fill:var(--ok-fill)}
 .sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:22px 0 8px}
 .sec h3{margin:0;}.sec .sub{font-variant-numeric:tabular-nums}
-.uses{padding-block:4px}.utotal input{width:84px;text-align:right;font-weight:400}.urow .q{font-variant-numeric:tabular-nums}
+.uses{padding-block:4px}.urow .q{font-variant-numeric:tabular-nums}
 .prow{margin-bottom:8px}.prow .top{display:flex;align-items:center;gap:12px}.prow .top>img{width:32px;height:32px;flex:none}
-.prow .nm2{flex:1;min-width:0;line-height:var(--lh-t)}.prow input{width:84px;text-align:right}
+.prow .nm2{flex:1;min-width:0;line-height:var(--lh-t)}
 .prow .dr{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .fold summary{cursor:pointer}.fold .desc{margin:8px 0 0}.desc{white-space:pre-line}
 .hatlink{text-decoration:none}.hatlink:hover{text-decoration:underline}
@@ -110,7 +118,7 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 #mats th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
 #mats td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
 #mats .num{text-align:right;font-variant-numeric:tabular-nums}
-#mats input{width:68px}#mats img{width:24px;height:24px;vertical-align:middle;margin-right:6px}
+#mats img{width:24px;height:24px;vertical-align:middle;margin-right:6px}
 .used a{text-decoration:none}.used a:hover{color:var(--accent);text-decoration:underline}
 .empty{text-align:center;padding:40px}
 </style>
@@ -160,6 +168,7 @@ let panelId=null;const F={fs:new Set(['none','collecting','crafted']),fn:new Set
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const img=(src,alt='')=>src?`<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" onerror="this.src='img/card.png'">`:'';
+const num=(attrs,v,label)=>`<span class="stepper"><button type="button" class="step" data-d="-1" aria-label="One less ${esc(label)}">−</button><input type="number" min="0" value="${v||''}" placeholder="0" ${attrs} aria-label="${esc(label)}"><button type="button" class="step" data-d="1" aria-label="One more ${esc(label)}">+</button></span>`;
 const chip=(id,kind)=>`<button type="button" class="chip copy" data-copy="${id}" title="Copy ${kind} ID">${id}</button>`;
 // sprites are drawn at one shared zoom so hats keep their true size relative to each other (card 2x, panel 3x)
 const art=(h,z)=>h.sprite&&h.size?`<img src="${esc(h.sprite)}" alt="${esc(h.name)}" style="width:${h.size[0]*z*(h.scale||1)}px;height:${h.size[1]*z*(h.scale||1)}px" onerror="this.src='img/card.png'">`:`<img class="fb" src="${esc(h.icon||'img/card.png')}" alt="${esc(h.name)}">`;
@@ -187,7 +196,7 @@ function quick(){
   const q=$('q').value.trim().toLowerCase(),m={};
   if(q)HATS.forEach(h=>h.ingredients.forEach(g=>{if(g.name.toLowerCase().includes(q))m[g.id]=g}));
   const L=Object.values(m).slice(0,12);$('quick').hidden=!L.length;
-  $('quick').innerHTML=L.map(g=>`<label class="ctl qrow">${img(g.icon,g.name)}<span>${esc(g.name)}</span>${chip(g.id,'item')}<input type="number" min="0" value="${have(null,g)||''}" placeholder="0" data-q="${g.id}" aria-label="Have ${esc(g.name)}"></label>`).join('');
+  $('quick').innerHTML=L.map(g=>`<label class="ctl qrow">${img(g.icon,g.name)}<span>${esc(g.name)}</span>${chip(g.id,'item')}${num(`data-q="${g.id}"`,have(null,g),'Have '+g.name)}</label>`).join('');
   $('quick').querySelectorAll('input').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.q]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
 }
 function matRows(list){
@@ -203,7 +212,7 @@ function renderMats(list){
   <table><thead><tr><th>Material</th><th class="num">Needed</th><th class="num">Have</th><th class="num">Still need</th><th>Status</th><th>Used by</th></tr></thead><tbody>
   ${rows.map(r=>`<tr class="${r.st==='off'?'off':''}"><td>${img(r.g.icon,r.g.name)}${esc(r.g.name)} ${chip(r.g.id,'item')}</td>
     <td class="num">${r.total.toLocaleString()}</td>
-    <td class="num"><input type="number" min="0" value="${r.have||''}" placeholder="0" data-m="${r.g.id}" aria-label="Have ${esc(r.g.name)}"></td>
+    <td class="num">${num(`data-m="${r.g.id}"`,r.have,'Have '+r.g.name)}</td>
     <td class="num"><b>${r.still.toLocaleString()}</b></td>
     <td><span class="chip ${TAG[r.st][1]}">${TAG[r.st][0]}</span></td>
     <td class="used">${r.hats.map(h=>`<a href="#" data-hat="${h.id}">${esc(h.name)}</a>`).join(', ')}</td></tr>`).join('')}</tbody></table>`;
@@ -239,22 +248,26 @@ function openHat(id,fromLink){
     return `<div class="box prow ${off?'off':''}"><div class="top">${img(g.icon,g.name)}
       <div class="nm2"><b class="${ok&&!off?'done':''}">${isHat?`<a href="#" class="hatlink" data-hat="${g.id}" title="Open this hat">${esc(g.name)} ↗</a>`:esc(g.name)}</b> ${chip(g.id,'item')}
         <div class="sub">× ${g.qty}${off||ok?'':` · need ${g.qty-n} more`} ${off?'<span class="chip">Not needed</span>':ok?'<span class="chip ok">Have enough</span>':''}</div></div>
-      <input type="number" min="0" value="${n||''}" placeholder="0" data-g="${g.id}" aria-label="Have ${esc(g.name)}"></div>
+      ${num(`data-g="${g.id}"`,n,'Have '+g.name)}</div>
       ${g.drops.length?`<div class="dr">Drops: ${dropsHtml(g.drops)}</div>`:''}</div>`}).join('');
-  const pill=t=>`<span class="chip">${esc(t)}</span>`;
+  const fact=(k,v)=>v?`<dt>${k}</dt><dd>${v}</dd>`:'';
   // other hats that take this hat as a material: one copy for the collection plus the quantity each still-open hat needs
   const uses=HATS.filter(x=>x.id!==h.id).map(x=>({x,q:(x.ingredients.find(g=>g.id===h.id)||{}).qty})).filter(u=>u.q);
   const openUses=uses.filter(u=>!DONE(status(u.x))),forHats=openUses.reduce((a,u)=>a+u.q,0),spare=have(null,{id:h.id});
   const usesHtml=uses.length?`<div class="sec"><h3>Also used for</h3><span class="sub">You need ${1+forHats} in total</span></div>
     <div class="box uses"><div class="lrow urow"><span class="n">Your collection</span><span class="q">× 1</span>${DONE(s)?'<span class="chip ok">Have it</span>':'<span class="chip warn">Needed</span>'}</div>
-    ${uses.map(u=>{const off=DONE(status(u.x));return `<div class="lrow urow ${off?'off':''}"><span class="n"><a href="#" class="hatlink" data-hat="${u.x.id}">${esc(label(u.x))} ↗</a></span><span class="q">× ${u.q}</span><span class="tag ${off?'':'need'}">${off?'Not needed':'Needed'}</span></div>`}).join('')}
-    <div class="lrow utotal"><span>Spare copies for crafting (need ${forHats})</span><input type="number" min="0" value="${spare||''}" placeholder="0" data-g="${h.id}" aria-label="Spare copies of ${esc(h.name)}"></div></div>`:'';
+    ${uses.map(u=>{const off=DONE(status(u.x));return `<div class="lrow urow ${off?'off':''}"><span class="n"><a href="#" class="hatlink" data-hat="${u.x.id}">${esc(label(u.x))} ↗</a></span><span class="q">× ${u.q}</span><span class="chip ${off?'':'warn'}">${off?'Not needed':'Needed'}</span></div>`}).join('')}
+    <div class="lrow utotal"><span>Spare copies for crafting (need ${forHats})</span>${num(`data-g="${h.id}"`,spare,'Spare copies of '+h.name)}</div></div>`:'';
   $('dbody').innerHTML=`${pbar(label(h))}
     <div class="hero"><div class="art">${art(h,3)}</div><div class="info">
-      <h2>${esc(label(h))}</h2><div class="idline">${chip(h.id,'item')}</div>
-      <div class="meta">${[otag(h),h.locations.length?pill(h.locations.join(' / ')):'',h.def!=null?pill('DEF '+h.def):'',h.level?pill('Lv '+h.level+'+'):''].join('')}</div>
-      ${h.npc||h.location?`<div class="src">${h.npc?`<span>${esc(h.npc)}</span>`:''}${h.location?`<button type="button" class="chip copy" data-copy="${esc(naviCmd(h.location))}" title="Copy navigation command">${esc(naviCmd(h.location))}</button>`:''}</div>`:''}
-${h.wiki||(h.rms||[]).length?`<div class="links">${h.wiki?`<a class="chip link" href="${esc(h.wiki)}" target="_blank" rel="noopener">Wiki ↗</a>`:''}${(h.rms||[]).map(r=>`<a class="chip link" href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.title)} (RateMyServer, official iRO quest)">RMS quest ↗</a>`).join('')}</div>`:''}
+      <div class="kicker">${otag(h)}${chip(h.id,'item')}</div>
+      <h2>${esc(label(h))}</h2>
+      <dl class="facts">
+        ${fact('Equips',[h.locations.join(' / '),h.def!=null?'DEF '+h.def:'',h.level?'Lv '+h.level+'+':''].filter(Boolean).map(esc).join(' · '))}
+        ${fact('Quest NPC',h.npc?esc(h.npc):'')}
+        ${fact('Location',h.location?`<button type="button" class="chip copy" data-copy="${esc(naviCmd(h.location))}" title="Copy navigation command">${esc(naviCmd(h.location))}</button>`:'')}
+        ${fact('Links',[h.wiki?`<a class="chip link" href="${esc(h.wiki)}" target="_blank" rel="noopener">Wiki ↗</a>`:'',...(h.rms||[]).map(r=>`<a class="chip link" href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.title)} (RateMyServer, official iRO quest)">RMS quest ↗</a>`)].join(''))}
+      </dl>
     </div></div>
     <div class="seg" role="group" aria-label="Status">${Object.entries(STATUS).map(([k,v])=>`<button type="button" data-st="${k}" class="${k===s?'on':''}">${v}</button>`).join('')}</div>
     ${h.ingredients.length?`<div class="box progress"><div class="progress-top"><span class="pct">${Math.round(progress(h)*100)}%</span><span class="sub">${done} of ${h.ingredients.length} materials ready</span></div><div class="meter lg"><i style="width:${progress(h)*100}%"></i></div></div>`:''}
@@ -309,6 +322,7 @@ async function init(){
   document.addEventListener('click',e=>{document.querySelectorAll('.ms[open]').forEach(d=>{if(!d.contains(e.target))d.open=false})});
   $('grid').onclick=e=>{const c=e.target.closest('.card');if(c){navStack=[];openHat(c.dataset.id)}};
   $('about').onclick=about;
+  document.addEventListener('click',e=>{const b=e.target.closest('.step');if(!b)return;const i=b.parentElement.querySelector('input');i.value=Math.max(0,(+i.value||0)+ +b.dataset.d)||'';i.dispatchEvent(new Event('change'))});
   $('th').onclick=()=>{const r=document.documentElement,n=(r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem('hat-theme',n)}catch{}};
   $('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));a.download='hat-tracker-progress.json';a.click()};
   $('imp').onclick=()=>$('file').click();
