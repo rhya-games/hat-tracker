@@ -13,14 +13,15 @@ PROGRESS = ROOT / 'progress.json'
 MAX = 2_000_000
 
 class Handler(SimpleHTTPRequestHandler):
-    def _json(self, code, obj):
+    def _json(self, code, obj, mtime=None):
         body = json.dumps(obj).encode()
         self.send_response(code); self.send_header('Content-Type', 'application/json'); self.send_header('Cache-Control', 'no-store')
+        if mtime: self.send_header('Last-Modified', self.date_time_string(mtime))  # when progress.json was last written
         self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)
 
     def do_GET(self):
         if self.path.split('?')[0] != '/api/progress': return super().do_GET()
-        try: self._json(200, json.loads(PROGRESS.read_text()) if PROGRESS.exists() else {})
+        try: self._json(200, json.loads(PROGRESS.read_text()) if PROGRESS.exists() else {}, PROGRESS.stat().st_mtime if PROGRESS.exists() else None)
         except (OSError, ValueError): self._json(500, {'error': 'progress.json is unreadable'})
 
     def do_POST(self):

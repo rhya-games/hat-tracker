@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hat Tracker</title>
+<title>Rhya's Hat Tracker</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f6f4ef">
 <style>
 /* Tokens. Text colours (--mute, --accent, --ok, --warn) and the white-text fills (--*-fill) are separate so both themes keep 4.5:1 contrast;
    --edge is the 3:1 border for controls, --line the quiet divider. Everything below uses these, no raw colours. */
@@ -16,7 +21,7 @@
   --accent:#ec8a6c;--accent-fill:#b4472b;--ok:#6fcf97;--ok-fill:#2a7d4f;--warn:#e6b04f;--warn-fill:#8a5a00;--info-fill:#2f72ab;--mute-fill:#5a6270}
 *{box-sizing:border-box}
 /* motion: short, eased, and off for people who ask for less */
-a,button,input,select,.ms summary,.chip,.card,.seg button,.xbtn{transition:background-color var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease),box-shadow var(--t) var(--ease),transform var(--t) var(--ease),opacity var(--t) var(--ease)}
+a,button,input,select,.ms summary,.chip,.card,.xbtn{transition:background-color var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease),box-shadow var(--t) var(--ease),transform var(--t) var(--ease),opacity var(--t) var(--ease)}
 .meter i{transition:width .35s var(--ease)}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes push{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}  /* transform and opacity only: animating width would re-lay-out every card each frame */
@@ -31,7 +36,7 @@ img{image-rendering:pixelated}
 h1,h2,h3,h4{margin:0;font-weight:600;line-height:var(--lh-t)}
 h1{font-size:var(--h1);margin-right:12px}h2{font-size:var(--h2)}h4{font-size:var(--text-m)}
 h3{margin:14px 0 4px;font-size:var(--text-s);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
-b,th,.nm,.ttl,.hatlink,.utotal,.fold summary,.seg button.on,.pct{font-weight:600}
+b,th,.nm,.ttl,.hatlink,.utotal,.fold summary,.pct{font-weight:600}
 a{color:var(--accent)}
 /* shared pieces */
 .dr,.drops-list{line-height:var(--lh-l)}
@@ -56,7 +61,12 @@ button.on{background:var(--accent-fill);color:var(--on-fill)}
 /* layout */
 header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-#q{flex:1;min-width:160px}
+.actions{display:contents}.lbl{display:none}
+.more{margin-left:auto}
+.more .opts .ms{display:block}.more .opts .ms summary{border-color:transparent;width:100%}.more .opts .ms .opts{position:static;margin:2px 0 6px 12px;box-shadow:none;border:0;padding:0;min-width:0;max-height:none;animation:none}.more .opts .lbl{display:inline}
+#q{min-width:min(300px,100%)}
+#q{flex:1}
+header .meter.lg{margin:16px 0 6px}
 .stats{margin-top:6px}
 .layout{display:flex;align-items:flex-start}
 main{padding:16px;flex:1;min-width:0}
@@ -64,11 +74,15 @@ aside{position:sticky;top:var(--hh,100px);width:max(600px,40vw);flex:none;height
 aside[hidden]{display:none}
 aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s var(--ease) reverse forwards}
 .dlg.swap{animation:rise .24s var(--ease)}
-@media (max-width:520px){.hero{flex-direction:column}.hero .art{width:100%}h1{width:100%}}
+@media (max-width:520px){.hero{flex-direction:column}.hero .art{width:100%}h1,#q{width:100%;flex-basis:100%}}
 @media (max-width:1000px){aside:not([hidden]){animation:sheet .3s var(--ease)}aside.out{animation:sheet .2s var(--ease) reverse forwards}aside{position:fixed;inset:0;top:auto;height:80vh;width:100%;border:1px solid var(--line);border-radius:var(--r-l) var(--r-l) 0 0;z-index:10;box-shadow:var(--shadow)}}
-.ms{position:relative}.ms summary{list-style:none;user-select:none}.ms summary::-webkit-details-marker{display:none}.ms summary::after{content:" ▾";color:var(--mute)}
+.ms{position:relative}.ms summary{list-style:none;user-select:none}.ms summary::-webkit-details-marker{display:none}.ms summary::after{content:"▾";display:inline-block;margin-left:6px;color:var(--mute);transition:transform var(--t) var(--ease)}.ms[open] summary::after{transform:rotate(180deg)}
 .ms[open] .opts{animation:pop .16s var(--ease)}.ms .opts{position:absolute;z-index:8;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--edge);border-radius:var(--r-m);padding:6px;min-width:180px;max-height:300px;overflow:auto;box-shadow:var(--shadow)}
-.ms label{display:flex;gap:8px;align-items:center;padding:3px 6px;white-space:nowrap;cursor:pointer}
+.ms.right .opts{left:auto;right:0}.ms.more .opts{max-height:min(70vh,520px)}
+/* every menu row (checkbox, action or choice) looks the same */
+.ms .opts label,.ms .opts button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:0;border-radius:var(--r);background:transparent;color:var(--ink);text-align:left;white-space:nowrap;cursor:pointer}
+.ms .opts label:hover,.ms .opts button:hover{background:var(--chip)}.ms .opts>*+*{margin-top:2px}
+.ms .opts [aria-checked=true]::after{content:"✓";margin-left:auto;padding-left:16px}
 .quick:not([hidden]){animation:rise .2s var(--ease)}.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.qrow{display:flex;align-items:center;gap:8px}
 /* cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
@@ -98,12 +112,8 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .stepper .step{border:0;border-radius:0;padding:6px 12px;line-height:1.25;color:var(--mute);background:var(--chip)}
 .stepper .step:hover{color:var(--ink);background:var(--line)}.stepper .step:active{transform:scale(.94)}
 .stepper:focus-within{border-color:var(--accent)}
-.seg{display:flex;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden;margin-bottom:12px}
-.seg button{flex:1;border:0;border-radius:0;background:transparent;padding:8px 4px;color:var(--mute)}
-.seg button+button{border-left:1px solid var(--edge)}
-.seg button:hover{color:var(--ink);background:var(--chip)}
-.seg button.on{--fill:var(--accent-fill);background:var(--fill);color:var(--on-fill)}
-.seg button.on[data-st=none]{--fill:var(--mute-fill)}.seg button.on[data-st=collecting]{--fill:var(--warn-fill)}.seg button.on[data-st=crafted],.seg button.on[data-st=owned]{--fill:var(--ok-fill)}
+.ms-status{--fill:var(--accent-fill)}.ms-status[data-st=none]{--fill:var(--mute-fill)}.ms-status[data-st=collecting]{--fill:var(--warn-fill)}.ms-status[data-st=crafted],.ms-status[data-st=owned]{--fill:var(--ok-fill)}
+.ms-status summary{background:var(--fill);color:var(--on-fill);border-color:transparent;font-weight:600}.ms-status summary::after{color:inherit}.ms-status summary:hover{border-color:var(--on-fill)}
 .sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:22px 0 8px}
 .sec h3{margin:0;}.sec .sub{font-variant-numeric:tabular-nums}
 .uses{padding-block:4px}.urow .q{font-variant-numeric:tabular-nums}
@@ -126,17 +136,20 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 <body>
 <header>
   <div class="row">
-    <h1>Hat Tracker</h1>
+    <h1>Rhya's Hat Tracker</h1>
     <input id="q" type="search" placeholder="Search hats, materials, NPC…">
     <details class="ms" id="fs"><summary>Status</summary><div class="opts"></div></details>
     <details class="ms" id="fn"><summary>Source</summary><div class="opts"></div></details>
-    <button id="rdy" title="Only hats whose materials are all collected">Ready to craft</button>
-    <button id="view" title="Switch between hat cards and the combined material list">Materials list</button>
-    <button id="about">About</button>
-    <button id="exp">Export</button><button id="imp">Import</button>
-    <button id="th" title="Toggle theme">◐</button>
+    <div class="actions" id="actions">
+      <button id="rdy" title="Only hats whose materials are all collected">Ready to craft</button>
+      <button id="view" title="Switch between hat cards and the combined material list">Materials list</button>
+      <button id="about">About</button>
+      <button id="exp">Export</button><button id="imp">Import</button>
+      <button id="th" title="Toggle theme"><span aria-hidden="true">◐</span><span class="lbl"> Theme</span></button>
+    </div>
+    <details class="ms right more" id="more" hidden><summary aria-label="More actions">More</summary><div class="opts"></div></details>
   </div>
-  <div class="meter"><i id="prog"></i></div>
+  <div class="meter lg"><i id="prog"></i></div>
   <div class="stats"><span id="stats"></span> · <span id="sv"></span></div>
 </header>
 <div class="layout"><main><div class="quick" id="quick" hidden></div><div class="grid" id="grid"></div><div id="mats" hidden></div><div class="empty" id="empty" hidden>No hats match.</div>
@@ -154,10 +167,12 @@ let serverOK=false,pushT=null;
 const note=t=>{const e=document.getElementById('sv');if(e)e.textContent=t};
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}
   if(!serverOK)return;note('Saving…');clearTimeout(pushT);pushT=setTimeout(pushServer,300)};
-async function pushServer(){try{const r=await fetch('api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});if(!r.ok)throw 0;note('Saved to progress.json')}catch{note('Could not save to progress.json')}}
+const clock=d=>d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',timeZoneName:'short'});  // local time, local format and zone
+const savedAt=d=>'Saved to progress.json'+(d&&!isNaN(d)?' at '+clock(d):'');
+async function pushServer(){try{const r=await fetch('api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});if(!r.ok)throw 0;note(savedAt(new Date()))}catch{note('Could not save to progress.json')}}
 // progress.json in the repo (served by scripts/serve.py) wins over the browser copy; without the server the browser copy is used
 async function loadServer(){try{const r=await fetch('api/progress',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();serverOK=true;
-  if(Object.keys(j).length){state=j;migrate();try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}note('Saved to progress.json')}
+  if(Object.keys(j).length){state=j;migrate();try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}note(savedAt(new Date(r.headers.get('Last-Modified'))))}
   else if(Object.keys(state).length)pushServer();else note('Saves to progress.json')}catch{serverOK=false;note('Saved in this browser only (run scripts/serve.py to save to the repo)')}}
 const st=h=>state[h.id]||(state[h.id]={status:'none',have:{}});
 const status=h=>{const s=(state[h.id]||{}).status||'none';return s==='none'&&h.ingredients.some(g=>have(h,g)>0)?'collecting':s};  // holding any material counts as in progress
@@ -219,6 +234,18 @@ function renderMats(list){
   $('mats').querySelectorAll('input[data-m]').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.m]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
   $('mats').querySelectorAll('[data-hat]').forEach(a=>a.onclick=e=>{e.preventDefault();navStack=[];openHat(+a.dataset.hat)});
 }
+// header: when the row would need an extra line, fold filters and actions into the More menu, least important first
+const FOLD=['th','imp','exp','about','view','rdy','fn','fs'];
+function fitHeader(){
+  const row=document.querySelector('.row'),box=$('actions'),more=$('more'),menu=more.querySelector('.opts');
+  const order=['fs','fn','rdy','view','about','exp','imp','th'].map($);
+  order.forEach(b=>b.classList.contains('ms')?row.insertBefore(b,box):box.append(b));more.hidden=true;more.open=false;
+  const lines=()=>{const c=[...row.children,...box.children].filter(e=>e.getClientRects().length).map(e=>{const r=e.getBoundingClientRect();return r.top+r.height/2}).sort((x,y)=>x-y);return c.reduce((n,v,i)=>n+(i&&v-c[i-1]>16?1:0),1)};  // items are centred, so group by vertical centre
+  const allowed=innerWidth<=520?3:1;  // phones: the title and the search each get their own line
+  const fold=[];
+  for(const id of FOLD){if(lines()<=allowed)break;more.hidden=false;fold.push(id);menu.replaceChildren(...order.filter(b=>fold.includes(b.id)));}
+  document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px');
+}
 function render(){
   $('rdy').classList.toggle('on',onlyReady);
   $('view').classList.toggle('on',view==='mats');$('view').textContent=view==='mats'?'Hat cards':'Materials list';
@@ -235,10 +262,10 @@ function render(){
   $('empty').hidden=list.length>0||view==='mats';
   const n=HATS.length,d=HATS.filter(h=>DONE(status(h))).length,c=HATS.filter(h=>status(h)==='collecting').length;
   $('prog').style.width=(n?d/n*100:0)+'%';
-  $('stats').textContent=`${d} of ${n} hats done · ${c} in progress · ${HATS.filter(h=>ready(h)&&!DONE(status(h))).length} ready to craft · showing ${list.length}`;
+  $('stats').textContent=`${d} of ${n} hats acquired · ${c} in progress · ${HATS.filter(h=>ready(h)&&!DONE(status(h))).length} ready to craft · Showing ${list.length} of ${n}`;
 }
 let navStack=[];
-const pbar=title=>`<div class="pbar">${navStack.length?`<a href="#" class="hatlink" id="back">← ${esc(label(HATS.find(x=>x.id==navStack[navStack.length-1])))}</a>`:''}<span class="ttl">${esc(title)}</span><button type="button" class="xbtn" id="close" title="Close (Esc)" aria-label="Close panel">×</button></div>`;
+const pbar=(title,extra='')=>`<div class="pbar">${navStack.length?`<a href="#" class="hatlink" id="back">← ${esc(label(HATS.find(x=>x.id==navStack[navStack.length-1])))}</a>`:''}<span class="ttl">${esc(title)}</span>${extra}<button type="button" class="xbtn" id="close" title="Close (Esc)" aria-label="Close panel">×</button></div>`;
 const dropsHtml=l=>l.map(d=>`${esc(d.mob)} ${chip(d.mob_id,'mob')} ${fmt(d.rate)}${d.mvp?' (MVP)':''}`).join(' · ');
 function openHat(id,fromLink){
   if(fromLink&&panelId!=null&&panelId!=id)navStack.push(panelId);
@@ -258,7 +285,7 @@ function openHat(id,fromLink){
     <div class="box uses"><div class="lrow urow"><span class="n">Your collection</span><span class="q">× 1</span>${DONE(s)?'<span class="chip ok">Have it</span>':'<span class="chip warn">Needed</span>'}</div>
     ${uses.map(u=>{const off=DONE(status(u.x));return `<div class="lrow urow ${off?'off':''}"><span class="n"><a href="#" class="hatlink" data-hat="${u.x.id}">${esc(label(u.x))} ↗</a></span><span class="q">× ${u.q}</span><span class="chip ${off?'':'warn'}">${off?'Not needed':'Needed'}</span></div>`}).join('')}
     <div class="lrow utotal"><span>Spare copies for crafting (need ${forHats})</span>${num(`data-g="${h.id}"`,spare,'Spare copies of '+h.name)}</div></div>`:'';
-  $('dbody').innerHTML=`${pbar(label(h))}
+  $('dbody').innerHTML=`${pbar(label(h),`<details class="ms right ms-status" id="stsel" data-st="${s}"><summary aria-label="Status">${STATUS[s]}</summary><div class="opts" role="menu">${Object.entries(STATUS).map(([k,v])=>`<button type="button" role="menuitemradio" aria-checked="${k===s}" data-v="${k}">${v}</button>`).join('')}</div></details>`)}
     <div class="hero"><div class="art">${art(h,3)}</div><div class="info">
       <div class="kicker">${otag(h)}${chip(h.id,'item')}</div>
       <h2>${esc(label(h))}</h2>
@@ -269,14 +296,13 @@ function openHat(id,fromLink){
         ${fact('Links',[h.wiki?`<a class="chip link" href="${esc(h.wiki)}" target="_blank" rel="noopener">Wiki ↗</a>`:'',...(h.rms||[]).map(r=>`<a class="chip link" href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.title)} (RateMyServer, official iRO quest)">RMS quest ↗</a>`)].join(''))}
       </dl>
     </div></div>
-    <div class="seg" role="group" aria-label="Status">${Object.entries(STATUS).map(([k,v])=>`<button type="button" data-st="${k}" class="${k===s?'on':''}">${v}</button>`).join('')}</div>
     ${h.ingredients.length?`<div class="box progress"><div class="progress-top"><span class="pct">${Math.round(progress(h)*100)}%</span><span class="sub">${done} of ${h.ingredients.length} materials ready</span></div><div class="meter lg"><i style="width:${progress(h)*100}%"></i></div></div>`:''}
     ${usesHtml}
     <div class="sec"><h3>Materials</h3></div>
     ${mats||'<div class="sub">No materials recorded (drop or other source).</div>'}
     ${h.drops.length?`<div class="sec"><h3>Hat drops</h3></div><div class="sub drops-list">${dropsHtml(h.drops)}</div>`:''}
     ${h.desc.length?`<div class="sec"><h3>Details</h3></div><details class="box fold"><summary>Stats &amp; description</summary><div class="desc">${esc(h.desc.join('\n'))}</div></details>`:''}`;
-  $('dbody').querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{st(h).status=b.dataset.st;save();render();openHat(id)});
+  $('stsel').querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{st(h).status=b.dataset.v;save();render();openHat(id)});
   $('dbody').querySelectorAll('input[data-g]').forEach(i=>i.onchange=()=>{
     const n=Math.max(0,+i.value||0);(state._inv||(state._inv={}))[i.dataset.g]=n;
     save();quick();render();openHat(id)});
@@ -322,6 +348,8 @@ async function init(){
   document.addEventListener('click',e=>{document.querySelectorAll('.ms[open]').forEach(d=>{if(!d.contains(e.target))d.open=false})});
   $('grid').onclick=e=>{const c=e.target.closest('.card');if(c){navStack=[];openHat(c.dataset.id)}};
   $('about').onclick=about;
+  fitHeader();let lastW=0;new ResizeObserver(([e])=>{const w=Math.round(e.contentRect.width);if(w!==lastW){lastW=w;fitHeader()}}).observe(document.querySelector('header'));
+  document.addEventListener('click',e=>{if(e.target.closest('#more .opts button'))$('more').open=false});
   document.addEventListener('click',e=>{const b=e.target.closest('.step');if(!b)return;const i=b.parentElement.querySelector('input');i.value=Math.max(0,(+i.value||0)+ +b.dataset.d)||'';i.dispatchEvent(new Event('change'))});
   $('th').onclick=()=>{const r=document.documentElement,n=(r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem('hat-theme',n)}catch{}};
   $('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));a.download='hat-tracker-progress.json';a.click()};
