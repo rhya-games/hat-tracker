@@ -20,4 +20,4 @@ Open http://localhost:8765/. `scripts/serve.py` serves `public/` and saves your 
 - `data/uaro-quests.json`, `index/iteminfo.jsonl`, `index/viewlist_img/`, `images/items/`, `rathena/` databases and NPC scripts
 - `index/rms-quests.json`, built with `bin/fetch_rms_quests.py <item ids>`; without it the RMS quest links are left out
 
-`scripts/build_data.py` holds the uaRO-specific corrections (`QTY`, `OVERRIDE`) and the sprite fixes (`HOLES`, `WHITE`, `STRIP`, `SCALE`).
+`scripts/build_data.py` holds the uaRO-specific corrections (`QTY`, `OVERRIDE`) and the display scale (`SCALE`). Sprite cleanup and its per-sprite exceptions live in game-data-tools (`bin/sprite_clean.py`, `data/sprite-fixes.json`); `scripts/import_sprite.py` adds a hand-captured sprite under `assets/sprites/`.

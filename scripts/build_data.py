@@ -46,85 +46,15 @@ for d in yml(f'{GD}/rathena/db/pre-re/mob_db.yml'):
 for v in drops.values(): v.sort(key=lambda x: -x['rate'])
 
 from PIL import Image
-HOLE_LUM = 150
+sys.path.insert(0, f'{GD}/bin')
+import sprite_clean  # shared sprite cleanup and its exception list (game-data-tools/data/sprite-fixes.json)
 SCALE = {}  # sprite id -> display size multiplier, for any hat that looks off next to a character
 ICON_ART = set()  # sprites broken in the source (Red Ribbon keeps 36 of 684 pixels); show the item icon instead
-SOLID = set()  # sprite ids: fill whatever lies between a part's own pixels (too aggressive for most art)
-# sprite id -> [(seed, box)]: paint white the see-through pixels reachable from seed without leaving box (x0, y0, x1, y1)
-FLOOD = {'158': [((9, 2), (8, 1, 12, 4)), ((40, 2), (37, 1, 41, 4))]}
-PIXELS = {'158': [(x, 3) for x in (*range(1, 6), *range(44, 49))] + [(6, 2), (7, 2), (6, 3), (11, 5), (12, 5), (13, 5), (13, 6), (42, 2), (43, 2), (43, 3), (36, 5), (37, 5), (38, 5), (36, 6)]}  # sprite id -> pixels to paint white (Angel Wing Ears: the empty feather line)
-MIN_FILL = {'418': 60}  # sprite id -> smallest enclosed gap that gets filled white (Beer Hat: foam yes, small gaps no)
-STRIP = {'200'}  # sprites drawn with a light-grey outline for pale backdrops (Zealotus Mask)
-HOLES, WHITE = {'138', '110', '381', '379', '586', '164', '165'}, {'378'}  # sprite ids to force; see clean()
-def clean(src, dst, strip=False):
-    """GIF -> RGBA PNG. The sources key transparency on palette entry 0, and the art's white pixels were mapped to it,
-    so white inside the art shows as holes. Transparent pixels connected to the border stay transparent. An enclosed
-    transparent region becomes white unless it looks like a real opening (a hood's face hole): large and ringed by dark
-    pixels. HOLES / WHITE below force the call for a region touching a sprite listed there."""
-    if dst.exists(): return
-    im = Image.open(src).convert('RGBA'); w, h = im.size; px = im.load()
-    WH = (255, 255, 255, 255)  # a few sprites (141) have an opaque white backdrop with transparent corners
-    bgst = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
-    if any(px[p] == WH for p in bgst):
-        vis = set()
-        while bgst:
-            x, y = bgst.pop()
-            if (x, y) in vis or not (0 <= x < w and 0 <= y < h) or not (px[x, y] == WH or px[x, y][3] == 0): continue
-            vis.add((x, y)); bgst += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-        for p in vis: px[p] = (0, 0, 0, 0)
-    seen, stack = set(), [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
-    while stack:
-        x, y = stack.pop()
-        if (x, y) in seen or not (0 <= x < w and 0 <= y < h) or px[x, y][3]: continue
-        seen.add((x, y)); stack += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-    done = set(seen)
-    for y0 in range(h):
-        for x0 in range(w):
-            if px[x0, y0][3] or (x0, y0) in done: continue
-            reg, st, ring = [], [(x0, y0)], []
-            while st:
-                x, y = st.pop()
-                if (x, y) in done: continue
-                if px[x, y][3]: ring.append(px[x, y]); continue
-                done.add((x, y)); reg.append((x, y)); st += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-            lum = sum(.3 * r + .59 * g + .11 * b for r, g, b, _ in ring) / max(len(ring), 1)
-            hole = len(reg) >= 12 and lum < HOLE_LUM
-            if len(reg) < MIN_FILL.get(Path(src).stem, 0): hole = True
-            if Path(src).stem in HOLES: hole = True
-            if Path(src).stem in WHITE: hole = False
-            if not hole:
-                for x, y in reg: px[x, y] = (255, 255, 255, 255)
-    for seed, (bx0, by0, bx1, by1) in FLOOD.get(Path(src).stem, []):
-        st = [seed]
-        while st:
-            x, y = st.pop()
-            if not (bx0 <= x <= bx1 and by0 <= y <= by1) or px[x, y][3]: continue
-            px[x, y] = (255, 255, 255, 255); st += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-    for p_ in PIXELS.get(Path(src).stem, []): px[p_] = (255, 255, 255, 255)
-    if Path(src).stem in SOLID:  # white interior drawn as transparent but reachable from outside: fill what lies between a part's own pixels, row-wise and column-wise
-        rest, parts = {(x, y) for y in range(h) for x in range(w) if px[x, y][3]}, []
-        while rest:
-            comp, st = set(), [next(iter(rest))]
-            while st:
-                q = st.pop()
-                if q in comp or q not in rest: continue
-                comp.add(q); st += [(q[0] + dx, q[1] + dy) for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2)]
-            rest -= comp; parts.append(comp)
-        for comp in parts:
-            rows, cols = {}, {}
-            for x, y in comp:
-                rows.setdefault(y, []).append(x); cols.setdefault(x, []).append(y)
-            for y, xs in rows.items():
-                for x in range(min(xs), max(xs) + 1):
-                    if not px[x, y][3] and min(cols.get(x, [h])) < y < max(cols.get(x, [-1])): px[x, y] = (255, 255, 255, 255)
-    # some sprites carry a light-grey outline meant for pale backdrops; drop it from the outer edge when it is a minority of the edge
-    def light(p): return .3 * p[0] + .59 * p[1] + .11 * p[2] > 205 and max(p[:3]) - min(p[:3]) < 30
-    edge = [(x, y) for y in range(h) for x in range(w) if px[x, y][3] and any(
-        not (0 <= x + dx < w and 0 <= y + dy < h) or (x + dx, y + dy) in seen for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]
-    lite = [e for e in edge if light(px[e])]
-    if strip and Path(src).stem in STRIP:
-        for e in lite: px[e] = (0, 0, 0, 0)
-    dst.parent.mkdir(parents=True, exist_ok=True); im.save(dst)
+_STALE = max(Path(sprite_clean.__file__).stat().st_mtime, sprite_clean.FIXES_FILE.stat().st_mtime)
+def clean(src, dst):
+    """Cleaned PNG at dst; reused unless the cleanup code or its fixes file changed since it was written."""
+    if dst.exists() and dst.stat().st_mtime > _STALE: return
+    sprite_clean.clean_image(src, dst)
 
 V = int(time.time())  # appended to image URLs so browsers don't keep stale copies
 def icon(i):
@@ -137,7 +67,7 @@ def viewimg(v):
         (OUT / 'img/view').mkdir(parents=True, exist_ok=True); shutil.copy(own, OUT / f'img/view/{v}.png'); return f'img/view/{v}.png?v={V}'
     s = Path(GD) / f'index/viewlist_img/{v}.gif'
     if v and s.exists():
-        clean(s, OUT / f'img/view/{v}.png', strip=True); return f'img/view/{v}.png?v={V}'
+        clean(s, OUT / f'img/view/{v}.png'); return f'img/view/{v}.png?v={V}'
 def sprite_size(v):
     f = OUT / f'img/view/{v}.png'
     return list(Image.open(f).size) if v and f.exists() else None
@@ -147,6 +77,8 @@ def iname(i, fb):
 quests = json.load(open(f'{GD}/data/uaro-quests.json'))['quests']
 try: rms = json.load(open(f'{GD}/index/rms-quests.json'))  # bin/fetch_rms_quests.py; official iRO quest pages on RateMyServer
 except OSError: rms = {}
+try: rms_npc = json.load(open(f'{GD}/index/rms-quest-npcs.json'))  # bin/fetch_rms_npcs.py; NPC + location of the official iRO quest
+except OSError: rms_npc = {}
 # uaRO changes to official recipes (uaro-docs improvements.md): quest id -> {ingredient item id: qty}
 QTY = {'uaro-boy-s-cap': {1030: 5}}
 OVERRIDE = {'uaro-evil-wing-ears': 5068}  # same name as 5044 (upper) and 18519; the quest takes Elven Ears (mid)
@@ -179,9 +111,10 @@ for q in quests:
             'locations': [k[5:] for k in (d.get('Locations') or {})], 'def': d.get('Defense'),
             'level': d.get('EquipLevelMin'), 'jobs': [j for j, v in (d.get('Jobs') or {}).items() if v] if d.get('Jobs') else [],
             'desc': [x for x in desc if x],
-            'quests': [q['id']], 'quest_name': q['name'], 'npc': q.get('npc'), 'location': q.get('location'),
+            'quests': [q['id']], 'quest_name': q['name'], 'npc': q.get('npc') or (rms_npc.get(str(hid)) or {}).get('npc'), 'location': q.get('location') or (rms_npc.get(str(hid)) or {}).get('navi'),
             'min_level': q.get('min_level'), 'wiki': q.get('wiki'), 'categories': q['categories'],
             'rms': [{'title': x['title'], 'url': x['url']} for x in rms.get(str(hid), []) if x['role'] == 'makes'],
+            'origin': 'classic' if rms.get(str(hid)) and any(x['role'] == 'makes' for x in rms[str(hid)]) else 'uaro',  # classic = an official iRO quest makes it
             'ingredients': ings, 'drops': drops.get(hid, [])[:6],
         }
 OUT.mkdir(exist_ok=True)
