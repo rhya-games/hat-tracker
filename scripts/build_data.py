@@ -81,6 +81,7 @@ try: rms_npc = json.load(open(f'{GD}/index/rms-quest-npcs.json'))  # bin/fetch_r
 except OSError: rms_npc = {}
 # uaRO changes to official recipes (uaro-docs improvements.md): quest id -> {ingredient item id: qty}
 QTY = {'uaro-boy-s-cap': {1030: 5}}
+NO_RECIPE = {'uaro-apple-of-archer'}  # no quest makes it: RateMyServer has it as a drop and as an ingredient of Model Training Hat, so the loot sheet's Arrow + Model Training Hat row would be a loop
 OVERRIDE = {'uaro-evil-wing-ears': 5068}  # same name as 5044 (upper) and 18519; the quest takes Elven Ears (mid)
 CUSTOM = {'Server Hat Quest', 'Headgear Quest'}
 hats, seen, missing = {}, set(), {'icon': set(), 'unknown_item': set()}
@@ -100,7 +101,7 @@ for q in quests:
         d, inf = items.get(hid) or {}, info.get(hid) or {}
         desc = inf.get('description') or []
         ings = []
-        for g in [g for g in q.get('ingredients') or [] if g.get('item_id')]:
+        for g in [g for g in q.get('ingredients') or [] if g.get('item_id') and q['id'] not in NO_RECIPE]:
             gi = g['item_id']
             if gi and not icon(gi): missing['icon'].add(gi)
             ings.append({'id': gi, 'name': iname(gi, g['item']), 'qty': QTY.get(q['id'], {}).get(gi, g['qty']), 'icon': icon(gi), 'drops': drops.get(gi, [])[:6]})

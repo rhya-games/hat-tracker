@@ -14,14 +14,15 @@
    --edge is the 3:1 border for controls, --line the quiet divider. Everything below uses these, no raw colours. */
 :root{--on-fill:#fff;--bg:#f6f4ef;--card:#fff;--chip:#ebe6da;--ink:#1f2328;--mute:#565d6b;--line:#e3dfd6;--edge:#86806f;
   --accent:#a63f25;--accent-fill:#a63f25;--ok:#1f6b3e;--ok-fill:#1f6b3e;--warn:#7a4e00;--warn-fill:#7a4e00;--info-fill:#2a6496;--mute-fill:#565d6b;
-  --ease:cubic-bezier(.2,.7,.2,1);--t:.18s;--text-s:14px;--text-m:16px;--h1:20px;--h2:24px;--lh:1.45;--lh-t:1.25;--lh-l:1.8;--r:6px;--r-m:10px;--r-l:14px;--pill:999px;--shadow:0 6px 24px rgba(0,0,0,.3)}
+  --ease:cubic-bezier(.2,.7,.2,1);--t:.18s;--text-s:14px;--text-m:16px;--h1:20px;--h2:24px;--lh:1.45;--lh-t:1.25;--lh-l:1.8;--r:6px;--r-m:10px;--r-l:14px;--pill:999px;--shadow:0 6px 24px rgba(0,0,0,.3);--shadow-sm:0 3px 12px rgba(0,0,0,.22);--shadow-side:-8px 0 24px rgba(0,0,0,.16)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#16181c;--card:#20242a;--chip:#2c323b;--ink:#e8e6e1;--mute:#a3abb6;--line:#31363e;--edge:#7b8594;
   --accent:#ec8a6c;--accent-fill:#b4472b;--ok:#6fcf97;--ok-fill:#2a7d4f;--warn:#e6b04f;--warn-fill:#8a5a00;--info-fill:#2f72ab;--mute-fill:#5a6270}}
 :root[data-theme=dark]{--bg:#16181c;--card:#20242a;--chip:#2c323b;--ink:#e8e6e1;--mute:#a3abb6;--line:#31363e;--edge:#7b8594;
   --accent:#ec8a6c;--accent-fill:#b4472b;--ok:#6fcf97;--ok-fill:#2a7d4f;--warn:#e6b04f;--warn-fill:#8a5a00;--info-fill:#2f72ab;--mute-fill:#5a6270}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 /* motion: short, eased, and off for people who ask for less */
-a,button,input,select,.ms summary,.chip,.card,.xbtn{transition:background-color var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease),box-shadow var(--t) var(--ease),transform var(--t) var(--ease),opacity var(--t) var(--ease)}
+a,button,input,select,.ms summary,.chip,.card,.round{transition:background-color var(--t) var(--ease),border-color var(--t) var(--ease),color var(--t) var(--ease),box-shadow var(--t) var(--ease),transform var(--t) var(--ease),opacity var(--t) var(--ease)}
 .meter i{transition:width .35s var(--ease)}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes push{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}  /* transform and opacity only: animating width would re-lay-out every card each frame */
@@ -59,29 +60,33 @@ button.on{background:var(--accent-fill);color:var(--on-fill)}
 .chip.link{color:var(--ink);border-color:var(--edge);padding:4px 12px}.chip.link:hover{color:var(--accent);border-color:var(--accent)}
 .chip.copy{font-family:ui-monospace,Menlo,monospace;padding:0 6px;border-radius:var(--r);border-color:var(--line);cursor:pointer}.chip.copy:hover{color:var(--ink);border-color:var(--accent)}.chip.copy.ok{border-color:var(--ok-fill)}
 /* layout */
+header,.pbar{transition:box-shadow var(--t) var(--ease)}
+header.stuck,aside.stuck .pbar{box-shadow:var(--shadow-sm)}  /* shown once the content has scrolled under them */
+header:has(.ms[open]){z-index:30}  /* an open header menu sits above everything, including the mobile sheet */
 header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .actions{display:contents}.lbl{display:none}
 .more{margin-left:auto}
 .more .opts .ms{display:block}.more .opts .ms summary{border-color:transparent;width:100%}.more .opts .ms .opts{position:static;margin:2px 0 6px 12px;box-shadow:none;border:0;padding:0;min-width:0;max-height:none;animation:none}.more .opts .lbl{display:inline}
-#q{min-width:min(300px,100%)}
-#q{flex:1}
+.search{position:relative;flex:1;min-width:min(300px,100%)}.search input{width:100%;padding-right:40px}
+.mag{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--mute);pointer-events:none}
 header .meter.lg{margin:16px 0 6px}
 .stats{margin-top:6px}
 .layout{display:flex;align-items:flex-start}
 main{padding:16px;flex:1;min-width:0}
-aside{position:sticky;top:var(--hh,100px);width:max(600px,40vw);flex:none;height:calc(100vh - var(--hh,100px));overflow:auto;background:var(--card);border-left:1px solid var(--line)}
+aside{z-index:4;box-shadow:var(--shadow-side);position:sticky;top:var(--hh,100px);width:max(600px,40vw);flex:none;height:calc(100vh - var(--hh,100px));overflow:auto;background:var(--card);border-left:1px solid var(--line)}
 aside[hidden]{display:none}
 aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s var(--ease) reverse forwards}
 .dlg.swap{animation:rise .24s var(--ease)}
-@media (max-width:520px){.hero{flex-direction:column}.hero .art{width:100%}h1,#q{width:100%;flex-basis:100%}}
+.row.stacked h1{width:100%;margin:0}
+@media (max-width:520px){.hero{flex-direction:column}.hero .art{width:100%}h1,.search{width:100%;flex-basis:100%}}
 @media (max-width:1000px){aside:not([hidden]){animation:sheet .3s var(--ease)}aside.out{animation:sheet .2s var(--ease) reverse forwards}aside{position:fixed;inset:0;top:auto;height:80vh;width:100%;border:1px solid var(--line);border-radius:var(--r-l) var(--r-l) 0 0;z-index:10;box-shadow:var(--shadow)}}
 .ms{position:relative}.ms summary{list-style:none;user-select:none}.ms summary::-webkit-details-marker{display:none}.ms summary::after{content:"▾";display:inline-block;margin-left:6px;color:var(--mute);transition:transform var(--t) var(--ease)}.ms[open] summary::after{transform:rotate(180deg)}
-.ms[open] .opts{animation:pop .16s var(--ease)}.ms .opts{position:absolute;z-index:8;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--edge);border-radius:var(--r-m);padding:6px;min-width:180px;max-height:300px;overflow:auto;box-shadow:var(--shadow)}
+.ms[open] .opts{animation:pop .16s var(--ease)}.ms .opts,.pop{position:absolute;z-index:30;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--edge);border-radius:var(--r-m);padding:6px;min-width:180px;max-height:300px;overflow:auto;box-shadow:var(--shadow)}
 .ms.right .opts{left:auto;right:0}.ms.more .opts{max-height:min(70vh,520px)}
 /* every menu row (checkbox, action or choice) looks the same */
-.ms .opts label,.ms .opts button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:0;border-radius:var(--r);background:transparent;color:var(--ink);text-align:left;white-space:nowrap;cursor:pointer}
-.ms .opts label:hover,.ms .opts button:hover{background:var(--chip)}.ms .opts>*+*{margin-top:2px}
+.ms .opts label,.ms .opts button,.pop>button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:0;border-radius:var(--r);background:transparent;color:var(--ink);text-align:left;white-space:nowrap;cursor:pointer}
+.ms .opts label:hover,.ms .opts button:hover,.pop>button:hover{background:var(--chip)}.ms .opts>*+*,.pop>*+*{margin-top:2px}.pop{position:fixed;margin:0}.pop:not([hidden]){animation:pop .16s var(--ease)}
 .ms .opts [aria-checked=true]::after{content:"✓";margin-left:auto;padding-left:16px}
 .quick:not([hidden]){animation:rise .2s var(--ease)}.quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.qrow{display:flex;align-items:center;gap:8px}
 /* cards */
@@ -98,8 +103,10 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .pbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;min-height:52px;margin:0 -20px 12px;padding:8px 12px 8px 20px;background:var(--card);border-bottom:1px solid var(--line)}
 .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pbar a{font-size:var(--text-s)}
-.xbtn{width:34px;height:34px;padding:0;border-radius:50%;font-size:var(--h2);line-height:1;display:grid;place-items:center;color:var(--mute);background:transparent;border-color:transparent;flex:none}
-.xbtn:hover{background:var(--chip);color:var(--ink);border-color:var(--edge)}
+.round{width:34px;height:34px;padding:0;border-radius:50%;display:inline-grid;place-items:center;flex:none;line-height:1}
+.round.ghost{color:var(--mute);background:transparent;border-color:transparent}.round.ghost:hover{background:var(--chip);color:var(--ink);border-color:var(--edge)}
+.round.count{font-size:var(--text-s);font-weight:600}
+.xbtn{font-size:var(--h2)}.pop-edit{display:flex;flex-direction:column;gap:6px;padding:2px}.pop-edit .stepper input{flex:1;width:auto;min-width:0}.pop.edit{width:144px;min-width:0;padding:4px}.pop-edit .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pop-edit .stepper .step{padding:6px 7px}.pop-edit .stepper input{padding:6px 2px}
 .hero{display:flex;gap:18px;align-items:flex-start;margin-bottom:18px}
 .hero .art{min-width:144px;min-height:144px;flex:none;border:1px solid var(--line);border-radius:var(--r-l)}
 .hero .info{flex:1;min-width:0}
@@ -107,7 +114,7 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .facts{display:grid;grid-template-columns:max-content 1fr;gap:8px 14px;align-items:center;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line)}
 .facts dt{color:var(--mute);font-size:var(--text-s)}.facts dd{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
 .stepper{display:inline-flex;flex:none;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden;background:var(--card)}
-.stepper input{width:56px;border:0;border-radius:0;text-align:center;font-weight:400;-moz-appearance:textfield;appearance:textfield}
+.stepper input{width:calc(5ch + 32px);padding-inline:6px;border:0;border-radius:0;text-align:center;font-weight:400;-moz-appearance:textfield;appearance:textfield}
 .stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .stepper .step{border:0;border-radius:0;padding:6px 12px;line-height:1.25;color:var(--mute);background:var(--chip)}
 .stepper .step:hover{color:var(--ink);background:var(--line)}.stepper .step:active{transform:scale(.94)}
@@ -120,29 +127,44 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 .prow{margin-bottom:8px}.prow .top{display:flex;align-items:center;gap:12px}.prow .top>img{width:32px;height:32px;flex:none}
 .prow .nm2{flex:1;min-width:0;line-height:var(--lh-t)}
 .prow .dr{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
-.fold summary{cursor:pointer}.fold .desc{margin:8px 0 0}.desc{white-space:pre-line}
+.fold summary{cursor:pointer}.fold .prow{margin:0;padding:10px 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent}.fold summary+.prow{margin-top:8px}.fold .desc{margin:8px 0 0}.desc{white-space:pre-line}
 .hatlink{text-decoration:none}.hatlink:hover{text-decoration:underline}
 .about p{margin:0 0 6px}.about h3{margin-top:18px}.about code{background:var(--chip);padding:1px 5px;border-radius:var(--r)}
 /* materials table */
 #mats table{width:100%;border-collapse:collapse}
+#mats .mname{white-space:nowrap}.mn{display:flex;align-items:center;gap:8px;min-width:0}
+#mats{overflow-x:auto}#mats td.used{width:100%;max-width:0;min-width:220px}.used-cell{display:flex;align-items:center;gap:8px;min-width:0}
+.used-list{display:flex;min-width:0;overflow:hidden;white-space:nowrap}.used-list a{flex:none}.used-list a.trunc{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.used-list a:not(.lastv)::after{content:",";margin-right:.35em}.more-hats{flex:none;padding:0;border:0;background:none;color:var(--mute);font-size:var(--text-s);white-space:nowrap}.more-hats:hover{color:var(--accent);text-decoration:underline}
+.mctl{display:none}.mcount{font-variant-numeric:tabular-nums;color:var(--mute);margin-right:4px}.mcount b{color:var(--ink)}.mtext{white-space:nowrap}
 #mats th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
 #mats td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
 #mats .num{text-align:right;font-variant-numeric:tabular-nums}
-#mats img{width:24px;height:24px;vertical-align:middle;margin-right:6px}
+#mats img{width:24px;height:24px;flex:none}
 .used a{text-decoration:none}.used a:hover{color:var(--accent);text-decoration:underline}
 .empty{text-align:center;padding:40px}
+@media (max-width:700px){
+  #mats table,#mats tbody{display:block}#mats thead{display:none}
+  #mats tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+  #mats td{display:none;border:0;padding:0}#mats td.mctl{display:flex;align-items:center;min-width:0}#mats td.mname{display:block;min-width:0}
+  #mats .mname .mtext{overflow:hidden;text-overflow:ellipsis;min-width:0}#mats .mname .chip{flex:none}
+  #mats .mctl{gap:2px}
+}
+@media (max-width:399px){  /* too narrow for name and id side by side: id goes under the name */
+  #mats .mn{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:4px}
+  #mats .mn img{grid-row:1/3;grid-column:1}#mats .mn .mtext{grid-column:2}#mats .mn .chip{grid-column:2;justify-self:start}
+}
 </style>
 </head>
 <body>
 <header>
   <div class="row">
     <h1>Rhya's Hat Tracker</h1>
-    <input id="q" type="search" placeholder="Search hats, materials, NPC…">
+    <div class="search"><input id="q" type="search" placeholder="Search hats, materials, NPC…" aria-label="Search hats, materials, NPC"><svg class="mag" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
     <details class="ms" id="fs"><summary>Status</summary><div class="opts"></div></details>
     <details class="ms" id="fn"><summary>Source</summary><div class="opts"></div></details>
     <div class="actions" id="actions">
       <button id="rdy" title="Only hats whose materials are all collected">Ready to craft</button>
-      <button id="view" title="Switch between hat cards and the combined material list">Materials list</button>
+      <button id="view" title="Switch between the hat list and the combined material list">Materials list</button>
       <button id="about">About</button>
       <button id="exp">Export</button><button id="imp">Import</button>
       <button id="th" title="Toggle theme"><span aria-hidden="true">◐</span><span class="lbl"> Theme</span></button>
@@ -155,6 +177,7 @@ aside:not([hidden]){animation:push .26s var(--ease)}aside.out{animation:push .2s
 <div class="layout"><main><div class="quick" id="quick" hidden></div><div class="grid" id="grid"></div><div id="mats" hidden></div><div class="empty" id="empty" hidden>No hats match.</div>
 <p class="sub" id="note"></p></main>
 <aside id="panel" hidden><div class="dlg" id="dbody"></div></aside></div>
+<div class="pop" id="pop" role="menu" hidden></div>
 <input type="file" id="file" accept="application/json" hidden>
 <script>
 const STATUS={none:'Not started',collecting:'Collecting',crafted:'Crafted',owned:'Owned'};
@@ -169,27 +192,42 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}
   if(!serverOK)return;note('Saving…');clearTimeout(pushT);pushT=setTimeout(pushServer,300)};
 const clock=d=>d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit',timeZoneName:'short'});  // local time, local format and zone
 const savedAt=d=>'Saved to progress.json'+(d&&!isNaN(d)?' at '+clock(d):'');
-async function pushServer(){try{const r=await fetch('api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});if(!r.ok)throw 0;note(savedAt(new Date()))}catch{note('Could not save to progress.json')}}
+async function pushServer(){try{const r=await fetch('api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});if(!r.ok)throw 0;note(savedAt(new Date()));return true}catch{note('Could not save to progress.json');return false}}
+// save right now (skipping the 300 ms delay) and wait for it; false if the repo copy could not be written
+async function saveNow(){
+  clearTimeout(pushT);try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}
+  if(!serverOK)return true;note('Saving…');return pushServer();
+}
 // progress.json in the repo (served by scripts/serve.py) wins over the browser copy; without the server the browser copy is used
 async function loadServer(){try{const r=await fetch('api/progress',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();serverOK=true;
   if(Object.keys(j).length){state=j;migrate();try{localStorage.setItem(KEY,JSON.stringify(state))}catch{}note(savedAt(new Date(r.headers.get('Last-Modified'))))}
   else if(Object.keys(state).length)pushServer();else note('Saves to progress.json')}catch{serverOK=false;note('Saved in this browser only (run scripts/serve.py to save to the repo)')}}
 const st=h=>state[h.id]||(state[h.id]={status:'none',have:{}});
-const status=h=>{const s=(state[h.id]||{}).status||'none';return s==='none'&&h.ingredients.some(g=>have(h,g)>0)?'collecting':s};  // holding any material counts as in progress
+const status=h=>{const s=(state[h.id]||{}).status||'none';
+  if(!h.ingredients.length)return s==='crafted'?'owned':s==='collecting'?'none':s;  // nothing to craft or collect: only Not started or Owned
+  return s==='none'&&h.ingredients.some(g=>have(h,g)>0)?'collecting':s};  // holding any material counts as in progress
+// amounts are whole numbers from 0 to MAX_HAVE; anything bigger is a typo, so the box goes back to what it was
+const MAX_HAVE=15000;
+function setHave(id,raw,input){
+  const inv=state._inv||(state._inv={}),prev=inv[id]||0,n=Math.floor(Math.max(0,+raw||0));
+  if(n>MAX_HAVE){if(input)input.value=prev||'';return false}
+  inv[id]=n;return true;
+}
 const have=(h,g)=>(state._inv||{})[g.id]||0;  // one shared count per material, not per hat
 const progress=h=>{const g=h.ingredients;if(!g.length)return 0;return g.reduce((a,x)=>a+Math.min(have(h,x),x.qty)/x.qty,0)/g.length};
 const ready=h=>h.ingredients.length&&h.ingredients.every(g=>have(h,g)>=g.qty);
-let panelId=null;const F={fs:new Set(['none','collecting','crafted']),fn:new Set(),fl:new Set()},ST_ALL=['none','collecting','crafted','owned'];let onlyReady=false,view='grid';
+let matsOpen=false;let panelId=null;const F={fs:new Set(['none','collecting','crafted']),fn:new Set(),fl:new Set()},ST_ALL=['none','collecting','crafted','owned'];let onlyReady=false,view='grid';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const img=(src,alt='')=>src?`<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" onerror="this.src='img/card.png'">`:'';
-const num=(attrs,v,label)=>`<span class="stepper"><button type="button" class="step" data-d="-1" aria-label="One less ${esc(label)}">−</button><input type="number" min="0" value="${v||''}" placeholder="0" ${attrs} aria-label="${esc(label)}"><button type="button" class="step" data-d="1" aria-label="One more ${esc(label)}">+</button></span>`;
+const num=(attrs,v,label)=>`<span class="stepper"><button type="button" class="step" data-d="-1" aria-label="One less ${esc(label)}">−</button><input type="number" min="0" max="${MAX_HAVE}" value="${v||''}" placeholder="0" ${attrs} aria-label="${esc(label)}"><button type="button" class="step" data-d="1" aria-label="One more ${esc(label)}">+</button></span>`;
 const chip=(id,kind)=>`<button type="button" class="chip copy" data-copy="${id}" title="Copy ${kind} ID">${id}</button>`;
 // sprites are drawn at one shared zoom so hats keep their true size relative to each other (card 2x, panel 3x)
 const art=(h,z)=>h.sprite&&h.size?`<img src="${esc(h.sprite)}" alt="${esc(h.name)}" style="width:${h.size[0]*z*(h.scale||1)}px;height:${h.size[1]*z*(h.scale||1)}px" onerror="this.src='img/card.png'">`:`<img class="fb" src="${esc(h.icon||'img/card.png')}" alt="${esc(h.name)}">`;
 const naviCmd=l=>l?'/navi '+l.replace(/^\/navi\s+/,''):'';
 const fmt=r=>r>=1?+r.toFixed(2)+'%':+r.toFixed(3)+'%';
 const ORIGIN={uaro:'uaRO',classic:'Classic'};
+const SOURCES={...ORIGIN,drop:'Dropped by mob'};  // Source filter: a hat matches any ticked source
 const otag=h=>`<span class="chip ${h.origin==='classic'?'accent':'cool'}" title="${h.origin==='classic'?'An official iRO (classic) hat quest':'A uaRO-only hat quest'}">${ORIGIN[h.origin]}</span>`;
 const label=h=>h.name+(h.slots?` [${h.slots}]`:'');
 
@@ -199,7 +237,7 @@ function filtered(){
     const s=status(h);
     if(!F.fs.has(s))return false;
     if(onlyReady&&!(ready(h)&&!DONE(s)))return false;
-    if(F.fn.size&&!F.fn.has(h.origin))return false;
+    if(F.fn.size&&![h.origin,...(h.drops.length?['drop']:[])].some(k=>F.fn.has(k)))return false;
     if(q&&!(h.name+' '+(h.npc||'')+' '+ORIGIN[h.origin]+' '+h.ingredients.map(g=>g.name).join(' ')).toLowerCase().includes(q))return false;
     return true});
 }
@@ -212,7 +250,7 @@ function quick(){
   if(q)HATS.forEach(h=>h.ingredients.forEach(g=>{if(g.name.toLowerCase().includes(q))m[g.id]=g}));
   const L=Object.values(m).slice(0,12);$('quick').hidden=!L.length;
   $('quick').innerHTML=L.map(g=>`<label class="ctl qrow">${img(g.icon,g.name)}<span>${esc(g.name)}</span>${chip(g.id,'item')}${num(`data-q="${g.id}"`,have(null,g),'Have '+g.name)}</label>`).join('');
-  $('quick').querySelectorAll('input').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.q]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
+  $('quick').querySelectorAll('input').forEach(i=>i.onchange=()=>{if(!setHave(i.dataset.q,i.value,i))return;save();render();if(panelId!=null)openHat(panelId)});
 }
 function matRows(list){
   const m={};
@@ -224,31 +262,71 @@ const TAG={need:['Needed','warn'],part:['Partly have','outline'],ok:['Have enoug
 function renderMats(list){
   const rows=matRows(list),need=rows.filter(r=>r.still>0);
   $('mats').innerHTML=`<div class="sub" style="margin-bottom:8px">${need.length} materials still needed · ${need.reduce((a,r)=>a+r.still,0).toLocaleString()} items in total, across the ${list.length} hats shown (hats marked Crafted or Owned don't count).</div>
-  <table><thead><tr><th>Material</th><th class="num">Needed</th><th class="num">Have</th><th class="num">Still need</th><th>Status</th><th>Used by</th></tr></thead><tbody>
-  ${rows.map(r=>`<tr class="${r.st==='off'?'off':''}"><td>${img(r.g.icon,r.g.name)}${esc(r.g.name)} ${chip(r.g.id,'item')}</td>
+  <table><thead><tr><th>Material</th><th class="num">Needed</th><th class="num">Have</th><th class="num">Remainder</th><th>Status</th><th>Used by</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="${r.st==='off'?'off':''}"><td class="mname"><div class="mn">${img(r.g.icon,r.g.name)}<span class="mtext">${esc(r.g.name)}</span>${chip(r.g.id,'item')}</div></td>
     <td class="num">${r.total.toLocaleString()}</td>
     <td class="num">${num(`data-m="${r.g.id}"`,r.have,'Have '+r.g.name)}</td>
     <td class="num"><b>${r.still.toLocaleString()}</b></td>
     <td><span class="chip ${TAG[r.st][1]}">${TAG[r.st][0]}</span></td>
-    <td class="used">${r.hats.map(h=>`<a href="#" data-hat="${h.id}">${esc(h.name)}</a>`).join(', ')}</td></tr>`).join('')}</tbody></table>`;
-  $('mats').querySelectorAll('input[data-m]').forEach(i=>i.onchange=()=>{(state._inv||(state._inv={}))[i.dataset.m]=Math.max(0,+i.value||0);save();render();if(panelId!=null)openHat(panelId)});
+    <td class="used"><div class="used-cell"><div class="used-list">${r.hats.map(h=>`<a href="#" data-hat="${h.id}" data-name="${esc(h.name)}">${esc(h.name)}</a>`).join('')}</div><button type="button" class="more-hats" hidden></button></div></td>
+    <td class="mctl"><span class="mcount" title="Have / needed"><b>${r.have.toLocaleString()}</b>/${r.total.toLocaleString()}</span><button type="button" class="round ghost m-edit" data-m="${r.g.id}" aria-label="Edit amount of ${esc(r.g.name)}">${PENCIL}</button><button type="button" class="round count" data-hats="${r.hats.map(h=>h.id).join(',')}" aria-label="Used by ${r.hats.length} hat${r.hats.length>1?'s':''}">${r.hats.length}</button></td></tr>`).join('')}</tbody></table>`;
+  $('mats').querySelectorAll('input[data-m]').forEach(i=>i.onchange=()=>{if(!setHave(i.dataset.m,i.value,i))return;save();render();if(panelId!=null)openHat(panelId)});
   $('mats').querySelectorAll('[data-hat]').forEach(a=>a.onclick=e=>{e.preventDefault();navStack=[];openHat(+a.dataset.hat)});
+  $('mats').querySelectorAll('.more-hats,.count').forEach(b=>b.onclick=e=>{e.stopPropagation();openPop(b)});
+  $('mats').querySelectorAll('.m-edit').forEach(b=>b.onclick=e=>{e.stopPropagation();openEdit(b)});
+  fitUsed();
+}
+// "Used by": one line only; hats that don't fit are counted in a "+N more" button that opens a popover
+function fitUsed(){
+  document.querySelectorAll('#mats .used-cell').forEach(cell=>{
+    const list=cell.firstElementChild,btn=cell.lastElementChild,items=[...list.children];
+    items.forEach(a=>{a.hidden=false;a.classList.remove('lastv','trunc')});btn.hidden=true;
+    if(!list.clientWidth)return;
+    let hid=0;
+    while(list.scrollWidth>list.clientWidth+1&&hid<items.length-1){hid++;items[items.length-hid].hidden=true;btn.hidden=false;btn.textContent='+'+hid+' more';btn.dataset.hats=items.slice(items.length-hid).map(a=>a.dataset.hat).join(',')}
+    const vis=items.filter(a=>!a.hidden);vis[vis.length-1].classList.add('lastv');
+    if(vis.length===1&&list.scrollWidth>list.clientWidth+1)vis[0].classList.add('trunc');  // a single long name is cut with an ellipsis
+  });
+}
+const PENCIL='<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 17l1-4 9.5-9.5a1.4 1.4 0 012 0l1 1a1.4 1.4 0 010 2L7 16z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 5l3 3" stroke="currentColor" stroke-width="1.6"/></svg>';
+function placePop(b){const p=$('pop');p.hidden=false;const r=b.getBoundingClientRect(),w=p.offsetWidth;p.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';p.style.top=(r.bottom+4)+'px'}
+// edit one material's amount from the compact list: a stepper in a popover
+function openEdit(b){
+  const p=$('pop'),key='e'+b.dataset.m,g=matRows(HATS).find(r=>String(r.g.id)===b.dataset.m);
+  if(!p.hidden&&p.dataset.for===key){closePop();return}
+  p.className='pop edit';p.dataset.for=key;p.innerHTML=`<div class="pop-edit"><span class="sub">${esc(g.g.name)}</span>${num(`data-pm="${b.dataset.m}"`,have(null,g.g),'Have '+g.g.name)}</div>`;
+  p.querySelector('input').onchange=e=>{if(!setHave(b.dataset.m,e.target.value,e.target))return;save();render();if(panelId!=null)openHat(panelId)};
+  placePop(b);
+}
+function closePop(){const p=$('pop');p.hidden=true}
+function openPop(b){
+  const p=$('pop');if(!p.hidden&&p.dataset.for===b.dataset.hats){closePop();return}
+  p.className='pop';p.dataset.for=b.dataset.hats;
+  p.innerHTML=b.dataset.hats.split(',').map(id=>`<button type="button" data-hat="${id}">${esc(HATS.find(h=>h.id==id).name)}</button>`).join('');
+  p.querySelectorAll('button').forEach(x=>x.onclick=()=>{closePop();navStack=[];openHat(+x.dataset.hat)});
+  placePop(b);
 }
 // header: when the row would need an extra line, fold filters and actions into the More menu, least important first
 const FOLD=['th','imp','exp','about','view','rdy','fn','fs'];
 function fitHeader(){
   const row=document.querySelector('.row'),box=$('actions'),more=$('more'),menu=more.querySelector('.opts');
   const order=['fs','fn','rdy','view','about','exp','imp','th'].map($);
-  order.forEach(b=>b.classList.contains('ms')?row.insertBefore(b,box):box.append(b));more.hidden=true;more.open=false;
   const lines=()=>{const c=[...row.children,...box.children].filter(e=>e.getClientRects().length).map(e=>{const r=e.getBoundingClientRect();return r.top+r.height/2}).sort((x,y)=>x-y);return c.reduce((n,v,i)=>n+(i&&v-c[i-1]>16?1:0),1)};  // items are centred, so group by vertical centre
-  const allowed=innerWidth<=520?3:1;  // phones: the title and the search each get their own line
-  const fold=[];
-  for(const id of FOLD){if(lines()<=allowed)break;more.hidden=false;fold.push(id);menu.replaceChildren(...order.filter(b=>fold.includes(b.id)));}
+  // put everything back inline, then fold items into More (least important first) until the row fits in `allowed` lines
+  const fold=allowed=>{
+    order.forEach(b=>b.classList.contains('ms')?row.insertBefore(b,box):box.append(b));more.hidden=true;more.open=false;
+    const out=[];
+    for(const id of FOLD){if(lines()<=allowed)break;more.hidden=false;out.push(id);menu.replaceChildren(...order.filter(b=>out.includes(b.id)))}
+    return lines()<=allowed;
+  };
+  row.classList.remove('stacked');
+  // one line if the title, a 300px search and More fit; otherwise stack: title on its own line, then search with the filters and More
+  if(!fold(1)){row.classList.add('stacked');fold(innerWidth<=520?3:2)}
   document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px');
 }
 function render(){
   $('rdy').classList.toggle('on',onlyReady);
-  $('view').classList.toggle('on',view==='mats');$('view').textContent=view==='mats'?'Hat cards':'Materials list';
+  $('view').classList.toggle('on',view==='mats');$('view').textContent=view==='mats'?'Hat list':'Materials list';
   document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px');
   const list=filtered();
   $('grid').hidden=view==='mats';$('mats').hidden=view!=='mats';
@@ -265,17 +343,18 @@ function render(){
   $('stats').textContent=`${d} of ${n} hats acquired · ${c} in progress · ${HATS.filter(h=>ready(h)&&!DONE(status(h))).length} ready to craft · Showing ${list.length} of ${n}`;
 }
 let navStack=[];
-const pbar=(title,extra='')=>`<div class="pbar">${navStack.length?`<a href="#" class="hatlink" id="back">← ${esc(label(HATS.find(x=>x.id==navStack[navStack.length-1])))}</a>`:''}<span class="ttl">${esc(title)}</span>${extra}<button type="button" class="xbtn" id="close" title="Close (Esc)" aria-label="Close panel">×</button></div>`;
+const pbar=(title,extra='')=>`<div class="pbar">${navStack.length?`<a href="#" class="hatlink" id="back">← ${esc(label(HATS.find(x=>x.id==navStack[navStack.length-1])))}</a>`:''}<span class="ttl">${esc(title)}</span>${extra}<button type="button" class="round ghost xbtn" id="close" title="Close (Esc)" aria-label="Close panel">×</button></div>`;
 const dropsHtml=l=>l.map(d=>`${esc(d.mob)} ${chip(d.mob_id,'mob')} ${fmt(d.rate)}${d.mvp?' (MVP)':''}`).join(' · ');
 function openHat(id,fromLink){
   if(fromLink&&panelId!=null&&panelId!=id)navStack.push(panelId);
   const h=HATS.find(x=>x.id==id),s=status(h),done=h.ingredients.filter(g=>have(h,g)>=g.qty).length;
+  const pc=DONE(s)?100:Math.round(progress(h)*100);
   const mats=h.ingredients.map(g=>{const n=have(h,g),ok=n>=g.qty,off=DONE(s);
     const isHat=HATS.some(x=>x.id===g.id&&x.id!==h.id);
     return `<div class="box prow ${off?'off':''}"><div class="top">${img(g.icon,g.name)}
       <div class="nm2"><b class="${ok&&!off?'done':''}">${isHat?`<a href="#" class="hatlink" data-hat="${g.id}" title="Open this hat">${esc(g.name)} ↗</a>`:esc(g.name)}</b> ${chip(g.id,'item')}
-        <div class="sub">× ${g.qty}${off||ok?'':` · need ${g.qty-n} more`} ${off?'<span class="chip">Not needed</span>':ok?'<span class="chip ok">Have enough</span>':''}</div></div>
-      ${num(`data-g="${g.id}"`,n,'Have '+g.name)}</div>
+        <div class="sub">× ${g.qty}${off||ok?'':` · need ${g.qty-n} more`} ${off?'':ok?'<span class="chip ok">Have enough</span>':''}</div></div>
+      ${off?'':num(`data-g="${g.id}"`,n,'Have '+g.name)}</div>
       ${g.drops.length?`<div class="dr">Drops: ${dropsHtml(g.drops)}</div>`:''}</div>`}).join('');
   const fact=(k,v)=>v?`<dt>${k}</dt><dd>${v}</dd>`:'';
   // other hats that take this hat as a material: one copy for the collection plus the quantity each still-open hat needs
@@ -285,7 +364,7 @@ function openHat(id,fromLink){
     <div class="box uses"><div class="lrow urow"><span class="n">Your collection</span><span class="q">× 1</span>${DONE(s)?'<span class="chip ok">Have it</span>':'<span class="chip warn">Needed</span>'}</div>
     ${uses.map(u=>{const off=DONE(status(u.x));return `<div class="lrow urow ${off?'off':''}"><span class="n"><a href="#" class="hatlink" data-hat="${u.x.id}">${esc(label(u.x))} ↗</a></span><span class="q">× ${u.q}</span><span class="chip ${off?'':'warn'}">${off?'Not needed':'Needed'}</span></div>`}).join('')}
     <div class="lrow utotal"><span>Spare copies for crafting (need ${forHats})</span>${num(`data-g="${h.id}"`,spare,'Spare copies of '+h.name)}</div></div>`:'';
-  $('dbody').innerHTML=`${pbar(label(h),`<details class="ms right ms-status" id="stsel" data-st="${s}"><summary aria-label="Status">${STATUS[s]}</summary><div class="opts" role="menu">${Object.entries(STATUS).map(([k,v])=>`<button type="button" role="menuitemradio" aria-checked="${k===s}" data-v="${k}">${v}</button>`).join('')}</div></details>`)}
+  $('dbody').innerHTML=`${pbar(label(h),`<details class="ms right ms-status" id="stsel" data-st="${s}"><summary aria-label="Status">${STATUS[s]}</summary><div class="opts" role="menu">${Object.entries(STATUS).filter(([k])=>h.ingredients.length||k==='none'||k==='owned').map(([k,v])=>`<button type="button" role="menuitemradio" aria-checked="${k===s}" data-v="${k}">${v}</button>`).join('')}</div></details>`)}
     <div class="hero"><div class="art">${art(h,3)}</div><div class="info">
       <div class="kicker">${otag(h)}${chip(h.id,'item')}</div>
       <h2>${esc(label(h))}</h2>
@@ -296,21 +375,24 @@ function openHat(id,fromLink){
         ${fact('Links',[h.wiki?`<a class="chip link" href="${esc(h.wiki)}" target="_blank" rel="noopener">Wiki ↗</a>`:'',...(h.rms||[]).map(r=>`<a class="chip link" href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.title)} (RateMyServer, official iRO quest)">RMS quest ↗</a>`)].join(''))}
       </dl>
     </div></div>
-    ${h.ingredients.length?`<div class="box progress"><div class="progress-top"><span class="pct">${Math.round(progress(h)*100)}%</span><span class="sub">${done} of ${h.ingredients.length} materials ready</span></div><div class="meter lg"><i style="width:${progress(h)*100}%"></i></div></div>`:''}
+    ${h.ingredients.length?`<div class="box progress"><div class="progress-top"><span class="pct">${pc}%</span><span class="sub">${DONE(s)?STATUS[s]:`${done} of ${h.ingredients.length} materials ready`}</span></div><div class="meter lg"><i style="width:${pc}%"></i></div></div>`:''}
     ${usesHtml}
-    <div class="sec"><h3>Materials</h3></div>
-    ${mats||'<div class="sub">No materials recorded (drop or other source).</div>'}
+    ${!mats?`<div class="sec"><h3>Materials</h3></div><div class="sub">${h.drops.length?'No recipe. This hat drops from the monsters below.':'No materials recorded (drop or other source).'}</div>`
+      :DONE(s)?`<details class="box fold" id="matfold"${matsOpen?' open':''}><summary>Materials (${h.ingredients.length})</summary>${mats}</details>`  // finished hats tuck their materials away
+      :`<div class="sec"><h3>Materials</h3></div>${mats}`}
     ${h.drops.length?`<div class="sec"><h3>Hat drops</h3></div><div class="sub drops-list">${dropsHtml(h.drops)}</div>`:''}
     ${h.desc.length?`<div class="sec"><h3>Details</h3></div><details class="box fold"><summary>Stats &amp; description</summary><div class="desc">${esc(h.desc.join('\n'))}</div></details>`:''}`;
+  if($('matfold'))$('matfold').ontoggle=e=>{matsOpen=e.target.open};
   $('stsel').querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{st(h).status=b.dataset.v;save();render();openHat(id)});
   $('dbody').querySelectorAll('input[data-g]').forEach(i=>i.onchange=()=>{
-    const n=Math.max(0,+i.value||0);(state._inv||(state._inv={}))[i.dataset.g]=n;
+    if(!setHave(i.dataset.g,i.value,i))return;
     save();quick();render();openHat(id)});
   $('close').onclick=closePanel;
   $('dbody').querySelectorAll('[data-hat]').forEach(a=>a.onclick=e=>{e.preventDefault();openHat(+a.dataset.hat,true)});
   if($('back'))$('back').onclick=e=>{e.preventDefault();openHat(navStack.pop())};
-  const keep=panelId==h.id?$('panel').scrollTop:0;if(panelId!=h.id)swap();panelId=h.id;clearTimeout(closeT);$('panel').classList.remove('out');$('panel').hidden=false;render();$('panel').scrollTop=keep;
+  const keep=panelId==h.id?$('panel').scrollTop:0;if(panelId!=h.id){swap();matsOpen=false}panelId=h.id;clearTimeout(closeT);$('panel').classList.remove('out');$('panel').hidden=false;render();$('panel').scrollTop=keep;edges();
 }
+function edges(){document.querySelector('header').classList.toggle('stuck',scrollY>0);$('panel').classList.toggle('stuck',$('panel').scrollTop>0)}
 function swap(){const d=$('dbody');d.classList.remove('swap');void d.offsetWidth;d.classList.add('swap')}  // fade the new hat in only when the panel changes, not on every keystroke
 let closeT=null;
 function closePanel(){navStack=[];panelId=null;render();const a=$('panel');if(a.hidden)return;a.classList.add('out');clearTimeout(closeT);closeT=setTimeout(()=>{a.hidden=true;a.classList.remove('out')},200)}
@@ -330,29 +412,32 @@ function about(){
   <h3>Data</h3>
   <p>Item data is official iRO (rathena), so values may differ on uaRO. Sprites come from the iRO client and are cleaned so transparent areas are not filled in wrongly. Quest data comes from the uaRO loot sheet, the uaRO wiki and RateMyServer, all collected by game-data-tools.</p>
   </div>`;
-  $("close").onclick=closePanel;swap();panelId=null;clearTimeout(closeT);$("panel").classList.remove('out');$("panel").hidden=false;render();$('panel').scrollTop=0;
+  $("close").onclick=closePanel;swap();panelId=null;clearTimeout(closeT);$("panel").classList.remove('out');$("panel").hidden=false;render();$('panel').scrollTop=0;edges();
 }
 async function init(){
   load();await loadServer();
   const t=(()=>{try{return localStorage.getItem('hat-theme')}catch{}})();if(t)document.documentElement.dataset.theme=t;
   const d=await (await fetch('hats.json',{cache:'no-cache'})).json();HATS=d.hats;$('note').textContent=d.note;
   msBuild('fs',Object.entries(STATUS),'Status');
-  msBuild('fn',Object.entries(ORIGIN),'Source');
+  msBuild('fn',Object.entries(SOURCES),'Source');
   $('q').addEventListener('input',()=>{quick();render()});
   document.addEventListener('click',async e=>{const b=e.target.closest('.copy');if(!b)return;e.preventDefault();e.stopPropagation();
     const v=b.dataset.copy;try{await navigator.clipboard.writeText(v)}catch{const t=document.createElement('textarea');t.value=v;document.body.append(t);t.select();try{document.execCommand('copy')}catch{}t.remove()}
     const o=b.textContent;b.textContent='copied';b.classList.add('ok');setTimeout(()=>{b.textContent=o;b.classList.remove('ok')},900)});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('panel').hidden&&!e.target.closest?.('.ms'))closePanel()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('pop').hidden)return closePop();if(!$('panel').hidden&&!e.target.closest?.('.ms'))closePanel()}});
   $('view').onclick=()=>{view=view==='mats'?'grid':'mats';render()};
   $('rdy').onclick=()=>{onlyReady=!onlyReady;render()};
   document.addEventListener('click',e=>{document.querySelectorAll('.ms[open]').forEach(d=>{if(!d.contains(e.target))d.open=false})});
   $('grid').onclick=e=>{const c=e.target.closest('.card');if(c){navStack=[];openHat(c.dataset.id)}};
   $('about').onclick=about;
+  document.addEventListener('click',e=>{if(!e.target.closest('#pop'))closePop()});addEventListener('scroll',closePop,{passive:true,capture:true});addEventListener('resize',closePop);
+  new ResizeObserver(()=>fitUsed()).observe($('mats'));
+  addEventListener('scroll',edges,{passive:true});$('panel').addEventListener('scroll',edges,{passive:true});edges();
   fitHeader();let lastW=0;new ResizeObserver(([e])=>{const w=Math.round(e.contentRect.width);if(w!==lastW){lastW=w;fitHeader()}}).observe(document.querySelector('header'));
   document.addEventListener('click',e=>{if(e.target.closest('#more .opts button'))$('more').open=false});
   document.addEventListener('click',e=>{const b=e.target.closest('.step');if(!b)return;const i=b.parentElement.querySelector('input');i.value=Math.max(0,(+i.value||0)+ +b.dataset.d)||'';i.dispatchEvent(new Event('change'))});
   $('th').onclick=()=>{const r=document.documentElement,n=(r.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'))==='dark'?'light':'dark';r.dataset.theme=n;try{localStorage.setItem('hat-theme',n)}catch{}};
-  $('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));a.download='hat-tracker-progress.json';a.click()};
+  $('exp').onclick=async()=>{await saveNow();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));a.download='hat-tracker-progress.json';a.click()};
   $('imp').onclick=()=>$('file').click();
   $('file').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(typeof j!=='object'||Array.isArray(j))throw 0;state=j;migrate();save();render()}catch{alert('Not a valid progress file.')}e.target.value=''};
   render();
