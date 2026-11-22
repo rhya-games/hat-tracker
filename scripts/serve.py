@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-"""Serve public/ on localhost and keep the tracker's progress in progress.json at the repo root.
+"""Serve public/ on localhost and keep the tracker's progress in progress.json at the repo root (the main checkout's, when run from a git worktree).
   python3 scripts/serve.py [port]      (default 8765)
 GET /api/progress returns the file ({} if missing); POST /api/progress replaces it (JSON object only, written atomically).
 Commit progress.json to keep a history of your progress."""
-import json, os, sys, tempfile
+import json, os, subprocess, sys, tempfile
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROGRESS = ROOT / 'progress.json'
+def main_checkout():
+    # there is only one progress.json: the one in the main checkout, even when this runs from a git worktree
+    try:
+        c = subprocess.run(['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+        if Path(c).name == '.git': return Path(c).parent
+    except (OSError, subprocess.CalledProcessError): pass
+    return ROOT
+PROGRESS = main_checkout() / 'progress.json'
 MAX = 2_000_000
 
 class Handler(SimpleHTTPRequestHandler):
@@ -32,7 +39,7 @@ class Handler(SimpleHTTPRequestHandler):
             data = json.loads(self.rfile.read(n))
             if not isinstance(data, dict): raise ValueError
         except ValueError: return self._json(400, {'error': 'expected a JSON object'})
-        fd, tmp = tempfile.mkstemp(dir=ROOT, prefix='.progress-', suffix='.tmp')
+        fd, tmp = tempfile.mkstemp(dir=PROGRESS.parent, prefix='.progress-', suffix='.tmp')
         with os.fdopen(fd, 'w') as f: json.dump(data, f, indent=1, sort_keys=True); f.write('\n')
         os.replace(tmp, PROGRESS); self._json(200, {'ok': True})
 

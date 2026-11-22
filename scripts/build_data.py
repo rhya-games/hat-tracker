@@ -83,6 +83,7 @@ except OSError: rms_npc = {}
 QTY = {'uaro-boy-s-cap': {1030: 5}}
 NO_RECIPE = {'uaro-apple-of-archer'}  # no quest makes it: RateMyServer has it as a drop and as an ingredient of Model Training Hat, so the loot sheet's Arrow + Model Training Hat row would be a loop
 OVERRIDE = {'uaro-evil-wing-ears': 5068}  # same name as 5044 (upper) and 18519; the quest takes Elven Ears (mid)
+UNAVAILABLE = {2250, 5438, 5439, 5440, 5441}  # the Cute Ribbons (plain, blue, green, red, white) are left out: not tracked, and not counted as materials
 CUSTOM = {'Server Hat Quest', 'Headgear Quest'}
 hats, seen, missing = {}, set(), {'icon': set(), 'unknown_item': set()}
 for q in quests:
@@ -97,11 +98,12 @@ for q in quests:
         if ids and q.get('ingredients'): found = [{'item_id': ids[0], 'item': q['name'], 'qty': 1}]
     for r in found:
         hid = r['item_id']
+        if hid in UNAVAILABLE: continue
         if hid in hats: hats[hid]['quests'].append(q['id']); continue
         d, inf = items.get(hid) or {}, info.get(hid) or {}
         desc = inf.get('description') or []
         ings = []
-        for g in [g for g in q.get('ingredients') or [] if g.get('item_id') and q['id'] not in NO_RECIPE]:
+        for g in [g for g in q.get('ingredients') or [] if g.get('item_id') and g['item_id'] not in UNAVAILABLE and q['id'] not in NO_RECIPE]:
             gi = g['item_id']
             if gi and not icon(gi): missing['icon'].add(gi)
             ings.append({'id': gi, 'name': iname(gi, g['item']), 'qty': QTY.get(q['id'], {}).get(gi, g['qty']), 'icon': icon(gi), 'drops': drops.get(gi, [])[:6]})

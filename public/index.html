@@ -252,11 +252,21 @@ function quick(){
   $('quick').innerHTML=L.map(g=>`<label class="ctl qrow">${img(g.icon,g.name)}<span>${esc(g.name)}</span>${chip(g.id,'item')}${num(`data-q="${g.id}"`,have(null,g),'Have '+g.name)}</label>`).join('');
   $('quick').querySelectorAll('input').forEach(i=>i.onchange=()=>{if(!setHave(i.dataset.q,i.value,i))return;save();render();if(panelId!=null)openHat(panelId)});
 }
+// hat ids that a hat needs, directly or through other hats
+function needsHats(h,out=new Set()){h.ingredients.forEach(g=>{if(out.has(g.id))return;const x=HATS.find(y=>y.id===g.id);if(x){out.add(x.id);needsHats(x,out)}});return out}
+// how many copies of a hat must be made: one for the collection plus every copy that open hats take as a material (their own materials multiply too).
+// Hats that need each other in a loop (the Cute Ribbons) are not multiplied, or the count would never end.
+function copies(h){
+  const mine=needsHats(h);
+  return HATS.reduce((a,x)=>{if(x.id===h.id||DONE(status(x))||mine.has(x.id))return a;const g=x.ingredients.find(i=>i.id===h.id);return a+(g?g.qty*copies(x):0)},1);
+}
 function matRows(list){
   const m={};
-  list.forEach(h=>h.ingredients.forEach(g=>{const o=m[g.id]||(m[g.id]={g,total:0,hats:[],open:0});o.total+=DONE(status(h))?0:g.qty;o.hats.push(h);if(!DONE(status(h)))o.open++}));
+  list.forEach(h=>h.ingredients.forEach(g=>{const o=m[g.id]||(m[g.id]={g,total:0,hats:[],open:0});o.total+=DONE(status(h))?0:g.qty*copies(h);o.hats.push(h);if(!DONE(status(h)))o.open++}));
+  // a material that is also a hat on the list needs one more copy for the collection itself (unless that hat is already done)
+  Object.values(m).forEach(o=>{const hat=HATS.find(x=>x.id==o.g.id);if(hat&&o.open>0&&!DONE(status(hat)))o.total+=1});
   return Object.values(m).map(o=>{const n=have(null,o.g),still=Math.max(0,o.total-n);
-    o.have=n;o.still=still;o.st=o.open===0?'off':still===0?'ok':n>0?'part':'need';return o}).sort((a,b)=>{const r={need:0,part:0,ok:1,off:2};return r[a.st]-r[b.st]||b.still-a.still||a.g.name.localeCompare(b.g.name)});
+    o.have=n;o.still=still;o.st=o.open===0?'off':still===0?'ok':n>0?'part':'need';return o}).sort((a,b)=>{const r={need:0,part:0,ok:1,off:2};return r[a.st]-r[b.st]||a.g.name.localeCompare(b.g.name)});
 }
 const TAG={need:['Needed','warn'],part:['Partly have','outline'],ok:['Have enough','ok'],off:['Not needed','']};
 function renderMats(list){
