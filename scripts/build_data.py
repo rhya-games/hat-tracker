@@ -117,7 +117,7 @@ for q in quests:
             'quests': [q['id']], 'quest_name': q['name'], 'npc': q.get('npc') or (rms_npc.get(str(hid)) or {}).get('npc'), 'location': q.get('location') or (rms_npc.get(str(hid)) or {}).get('navi'),
             'min_level': q.get('min_level'), 'wiki': q.get('wiki'), 'categories': q['categories'],
             'rms': [{'title': x['title'], 'url': x['url']} for x in rms.get(str(hid), []) if x['role'] == 'makes'],
-            'origin': 'classic' if rms.get(str(hid)) and any(x['role'] == 'makes' for x in rms[str(hid)]) else 'uaro',  # classic = an official iRO quest makes it
+            'origin': 'classic' if rms.get(str(hid)) and any(x['role'] == 'makes' for x in rms[str(hid)]) else 'drop' if not ings and drops.get(hid) else 'uaro',  # classic = an official iRO quest makes it; drop = no recipe, a mob drops the hat itself
             'ingredients': ings, 'drops': drops.get(hid, [])[:6],
         }
 OUT.mkdir(exist_ok=True)
